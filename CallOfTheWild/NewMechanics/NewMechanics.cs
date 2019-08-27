@@ -1336,6 +1336,31 @@ namespace CallOfTheWild
             }
         }
 
+         public class ActivatableAbilityMainWeaponTypeAllowed : ActivatableAbilityRestriction
+        {
+            public BlueprintWeaponType[] weapon_types;
+
+            private bool checkFeature(BlueprintWeaponType type)
+            {
+                if (weapon_types == null)
+                {
+                    return true;
+                }
+                return  Array.Exists(weapon_types, t => t == type);
+            }
+
+            public override bool IsAvailable()
+            {
+                var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
+                if (weapon == null)
+                {
+                    return false;
+                }
+
+                return checkFeature(weapon.Blueprint.Type);
+            }
+        }
+
 
         [ComponentName("Ignores Aoo with specified weapons")]
         [AllowedOn(typeof(BlueprintUnitFact))]

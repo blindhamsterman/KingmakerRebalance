@@ -16,14 +16,17 @@ using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.PubSubSystem;
 using Kingmaker.Blueprints.Items.Ecnchantments;
+using Kingmaker.Enums.Damage;
 
 using Kingmaker.UnitLogic;
 using System;
 using System.Collections.Generic;
+using Kingmaker.RuleSystem.Rules.Damage;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.Buffs.Blueprints;
 using Kingmaker.UnitLogic.Alignments;
+using Kingmaker.UnitLogic.Mechanics.Components;
 using static Kingmaker.UnitLogic.ActivatableAbilities.ActivatableAbilityResourceLogic;
 using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
 
@@ -34,13 +37,6 @@ namespace CallOfTheWild
         static LibraryScriptableObject library => Main.library;
         internal static BlueprintCharacterClass arcanearcher;
         internal static BlueprintCharacterClass[] arcanearcherArray;
-        static internal ActivatableAbilityGroup enhance_arrows_enchancement_group = ActivatableAbilityGroupExtension.EnhanceArrowsEnchantment.ToActivatableAbilityGroup();
-        static internal BlueprintBuff enhance_arrows_buff;
-        static internal BlueprintAbilityResource enhance_arrows_resource;
-        static internal BlueprintFeature arcane_archer_enhance_arrow_elemental;
-        static internal BlueprintFeature arcane_archer_enhance_arrow_distance;
-        static internal BlueprintFeature arcane_archer_enhance_arrow_burst;
-        static internal BlueprintFeature arcane_archer_enhance_arrow_aligned;
 
         internal static void Load()
         {
@@ -130,20 +126,18 @@ namespace CallOfTheWild
             allowed_weapons[3] = library.Get<BlueprintWeaponType>("011f6f86a0b16df4bbf7f40878c3e80b"); // composite shortbow
 
             // TODO: implement these.
-
-            createEnhanceArrows(allowed_weapons);
             var entries = new List<LevelEntry> {
                 Helpers.LevelEntry(1, proficiencies, CreateSpellbookChoice(), CreateEnhanceArrowsMagic(allowed_weapons),
                                    library.Get<BlueprintFeature>("d3e6275cfa6e7a04b9213b7b292a011c"), // ray calculate feature
                                    library.Get<BlueprintFeature>("62ef1cdb90f1d654d996556669caf7fa")),
-                Helpers.LevelEntry(2), //CreateImbueArrow(allowed_weapons)),
-                Helpers.LevelEntry(3, arcane_archer_enhance_arrow_elemental),// , CreateEnhanceArrows(allowed_weapons)),
+                Helpers.LevelEntry(2, library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc")), // Eldritch Archer Ranged Spellstrike //CreateImbueArrow(allowed_weapons)),
+                Helpers.LevelEntry(3, CreateEnhanceArrowsElemental(allowed_weapons)),// , CreateEnhanceArrows(allowed_weapons)),
                 Helpers.LevelEntry(4),// , CreateSeekerArrow(allowed_weapons)),
                 Helpers.LevelEntry(5),// , CreateEnhanceArrows(allowed_weapons)),
                 Helpers.LevelEntry(6),// , CreatePhaseArrow(allowed_weapons)),
-                Helpers.LevelEntry(7, arcane_archer_enhance_arrow_burst),// , CreateEnhanceArrows(allowed_weapons)),
+                Helpers.LevelEntry(7),// , CreateEnhanceArrows(allowed_weapons)),
                 Helpers.LevelEntry(8),// , CreateHailOfArrows(allowed_weapons)),
-                Helpers.LevelEntry(9, arcane_archer_enhance_arrow_aligned),// , CreateEnhanceArrows(allowed_weapons)),
+                Helpers.LevelEntry(9),// , CreateEnhanceArrows(allowed_weapons)),
                 Helpers.LevelEntry(10),//,  CreateArrowOfDeath(allowed_weapons)),
             };
 
@@ -189,7 +183,7 @@ namespace CallOfTheWild
         static BlueprintFeature CreateEnhanceArrowsMagic(BlueprintWeaponType[] allowed_weapons)
         {
 
-            return Helpers.CreateFeature("ArcaneArcherEnhanceArrows", "Enhance Arrows (Magic)",
+            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsMagic", "Enhance Arrows (Magic)",
                 $"At 1st level, every nonmagical arrow an arcane archer nocks and lets fly becomes magical, gaining a +1 enhancement bonus. " +
                 "Unlike magic weapons created by normal means, the archer need not spend gold pieces to accomplish this task. However, an archer’s " +
                 "magic arrows only function for him.",
@@ -197,6 +191,36 @@ namespace CallOfTheWild
                 Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
                 FeatureGroup.None,
                 Helpers.Create<EnhanceArrowsMagic>(u => u.weapon_types = allowed_weapons));
+        }
+
+        static BlueprintFeature CreateEnhanceArrowsElemental(BlueprintWeaponType[] allowed_weapons)
+        {
+            var resource = Helpers.CreateAbilityResource("EnhanceArrowsElementalResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
+            resource.SetFixedResource(1);
+            var ability = Helpers.CreateAbility("EnhanceArrowsFireAbility", "Enhance Arrows (Fire)",
+                $"Whilst active, your arrows deal 1d6 additional Fire damage.",
+                "5e5f8a964e21460399018c65da9f26e7", Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), AbilityType.Special, CommandType.Free, 
+                AbilityRange.Weapon, null, null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Fire; }));
+            var ability2 = Helpers.CreateAbility("EnhanceArrowsFrostAbility", "Enhance Arrows (Frost)",
+                $"Whilst active, your arrows deal 1d6 additional Frost damage.",
+                "1394d9a00c9b493286f07fc5e038753a", Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), AbilityType.Special, CommandType.Free, 
+                AbilityRange.Weapon, null, null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Cold; }));
+            var ability3 = Helpers.CreateAbility("EnhanceArrowsShockAbility", "Enhance Arrows (Shock)",
+                $"Whilst active, your arrows deal 1d6 additional Shock damage.",
+                "6f6ae2b441f54c8b984633825f80e11f", Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), AbilityType.Special, CommandType.Free, 
+                AbilityRange.Weapon, null, null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
+            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
+                $"At 3rd level, In addition, the arcane archer’s arrows gain a number of additional qualities as he gains additional " +
+                "levels. The elemental, elemental burst, and aligned qualities can be changed once per day, when the arcane archer prepares " +
+                "spells or, in the case of spontaneous spellcasters, after 8 hours of rest." +
+                "\n At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock.",
+                "dc982851404b45388eca6fc8deacebcb",
+                Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+                FeatureGroup.None,
+                Helpers.CreateAddFact(ability),
+                Helpers.CreateAddFact(ability2),
+                Helpers.CreateAddFact(ability3),
+                Helpers.CreateAddAbilityResource(resource));
         }
 
         static BlueprintFeature CreateSpellbookChoice()
@@ -219,276 +243,6 @@ namespace CallOfTheWild
             // aa_progression.ComponentsArray.AddToArray(Helpers.Create<SkipLevelsForSpellProgression>(s => s.Levels = skipLevels.ToArray()));
             return aa_progression;
         }
-
-        static BlueprintActivatableAbility createEnhanceArrowsFeature(string name_prefix, string display_name, string description, UnityEngine.Sprite icon, BlueprintBuff sacred_buff,
-                                                                         BlueprintItemEnchantment enchantment, int group_size, ActivatableAbilityGroup group,
-                                                                         AlignmentMaskType alignment = AlignmentMaskType.Any)
-        {
-            //create buff
-            //create activatable ability that gives buff
-            //on main buff in activate add corresponding enchantment
-            //create feature that gives activatable ability
-
-            BlueprintBuff buff;
-
-            if (enchantment is BlueprintWeaponEnchantment)
-            {
-                buff = Helpers.CreateBuff(name_prefix + "Buff",
-                                              display_name,
-                                              description,
-                                              "",
-                                              icon,
-                                              null,
-                                              Common.createBuffContextEnchantPrimaryHandWeapon(Common.createSimpleContextValue(1), false, true,
-                                                                                               new Kingmaker.Blueprints.Items.Weapons.BlueprintWeaponType[0],
-                                                                                               (BlueprintWeaponEnchantment)enchantment)
-                                                                                               );
-            }
-            else
-            {
-                buff = Helpers.CreateBuff(name_prefix + "Buff",
-                                              display_name,
-                                              description,
-                                              "",
-                                              icon,
-                                              null,
-                                              Common.createBuffContextEnchantArmor(Common.createSimpleContextValue(1), false, true,
-                                                                                               (BlueprintArmorEnchantment)enchantment)
-                                                                                               );
-            }
-            buff.SetBuffFlags(BuffFlags.HiddenInUi);
-            var switch_buff = Helpers.CreateBuff(name_prefix + "SwitchBuff",
-                                  display_name,
-                                  description,
-                                  "",
-                                  icon,
-                                  null);
-            switch_buff.SetBuffFlags(BuffFlags.HiddenInUi);
-
-            Common.addContextActionApplyBuffOnFactsToActivatedAbilityBuffNoRemove(sacred_buff, buff, switch_buff);
-
-            var ability = Helpers.CreateActivatableAbility(name_prefix + "ToggleAbility",
-                                                                        display_name,
-                                                                        description,
-                                                                        "",
-                                                                        icon,
-                                                                        switch_buff,
-                                                                        AbilityActivationType.Immediately,
-                                                                        CommandType.Free,
-                                                                        null
-                                                                        );
-            ability.WeightInGroup = group_size;
-            ability.Group = group;
-            ability.DeactivateImmediately = true;
-
-            if (alignment != AlignmentMaskType.Any)
-            {
-                ability.AddComponent(Helpers.Create<NewMechanics.ActivatableAbilityAlignmentRestriction>(c => c.Alignment = alignment));
-            }
-            return ability;
-        }
-
-        static void createEnhanceArrows(BlueprintWeaponType[] allowed_weapons)
-        {
-
-           /* In addition, the arcane archer’s arrows gain a number of additional qualities as he gains additional levels. The elemental, elemental burst, 
-           and aligned qualities can be changed once per day, when the arcane archer prepares spells or, in the case of spontaneous spellcasters, after 8 hours of rest.
-
-           At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock.
-
-           At 5th level, every non-magical arrow fired by an arcane archer gains the distance weapon quality.
-
-           At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: flaming burst, icy burst, 
-           or shocking burst. This ability replaces the ability gained at 3rd level.
-
-           At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: anarchic, axiomatic, holy, or unholy. 
-           The arcane archer cannot choose an ability that is the opposite of his alignment (for example, a lawful good arcane archer could not choose anarchic or 
-           unholy as his weapon quality).
-
-           The bonuses granted by a magic bow apply as normal to arrows that have been enhanced with this ability. Only the larger enhancement bonus applies. 
-           Duplicate abilities do not stack.
-            */
-            var enchants = new BlueprintWeaponEnchantment[] {library.Get<BlueprintWeaponEnchantment>("d704f90f54f813043a525f304f6c0050"),
-                                                             library.Get<BlueprintWeaponEnchantment>("9e9bab3020ec5f64499e007880b37e52"),
-                                                             library.Get<BlueprintWeaponEnchantment>("d072b841ba0668846adeb007f623bd6c"),
-                                                             library.Get<BlueprintWeaponEnchantment>("6a6a0901d799ceb49b33d4851ff72132"),
-                                                             library.Get<BlueprintWeaponEnchantment>("746ee366e50611146821d61e391edf16") };
-
-            var enhancement_buff = Helpers.CreateBuff("ArcaneArcherEnhanceArrowsBaseBuff",
-                                         "",
-                                         "",
-                                         "",
-                                         null,
-                                         null,
-                                         Common.createBuffRemainingGroupsSizeEnchantPrimaryHandWeapon(enhance_arrows_enchancement_group,
-                                                                                                      false, true,
-                                                                                                      enchants
-                                                                                                      )
-                                         );
-            enhance_arrows_buff = Helpers.CreateBuff("ArcaneArcherEnhanceArrowsSwitchBuff",
-                                                                 "At 3rd level, In addition, the arcane archer’s arrows gain a number of additional qualities as he gains additional "+
-                                                                 "levels. The elemental, elemental burst, and aligned qualities can be changed once per day, when the arcane archer prepares "+
-                                                                 "spells or, in the case of spontaneous spellcasters, after 8 hours of rest." +
-                                                                 "\n At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock." +
-                                                                 "\n At 5th level, every non-magical arrow fired by an arcane archer gains the distance weapon quality." +
-                                                                 "\n At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: flaming burst, "+
-                                                                 "icy burst, or shocking burst. This ability replaces the ability gained at 3rd level." +
-                                                                 "\n At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: anarchic, axiomatic, holy, "+
-                                                                 "or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment (for example, a lawful good arcane archer could not choose "+
-                                                                 "anarchic or unholy as his weapon quality).",
-                                                                 "",
-                                                                 "",
-                                                                 Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"),
-                                                                 null,
-                                                                 Helpers.CreateAddFactContextActions(activated: Common.createContextActionApplyBuff(enhancement_buff, Helpers.CreateContextDuration(),
-                                                                                                                is_child: true, is_permanent: true, dispellable: false)
-                                                                                                     )
-                                                                 );
-            enhance_arrows_buff.SetBuffFlags(BuffFlags.HiddenInUi);
-
-            var flaming = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsFlaming",
-                                                                "Enhance Arrows - Flaming",
-                                                                "At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock.",
-                                                                library.Get<BlueprintActivatableAbility>("7902941ef70a0dc44bcfc174d6193386").Icon,
-                                                                enhance_arrows_buff,
-                                                                library.Get<BlueprintWeaponEnchantment>("30f90becaaac51f41bf56641966c4121"),
-                                                                1, enhance_arrows_enchancement_group);
-
-            var frost = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsFrost",
-                                                            "Enhance Arrows - Frost",
-                                                            "At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock.",
-                                                            library.Get<BlueprintActivatableAbility>("b338e43a8f81a2f43a73a4ae676353a5").Icon,
-                                                            enhance_arrows_buff,
-                                                            library.Get<BlueprintWeaponEnchantment>("421e54078b7719d40915ce0672511d0b"),
-                                                            1, enhance_arrows_enchancement_group);
-
-            var shock = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsShock",
-                                                            "Enhance Arrows - Shock",
-                                                            "At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock.",
-                                                            library.Get<BlueprintActivatableAbility>("a3a9e9a2f909cd74e9aee7788a7ec0c6").Icon,
-                                                            enhance_arrows_buff,
-                                                            library.Get<BlueprintWeaponEnchantment>("7bda5277d36ad114f9f9fd21d0dab658"),
-                                                            1, enhance_arrows_enchancement_group);
-
-            var flaming_burst = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsFlamingBurst",
-                                                                      "Enhance Arrows - Flaming Burst",
-                                                                      "At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: flaming burst, icy burst, or shocking burst. This ability replaces the ability gained at 3rd level.",
-                                                                      library.Get<BlueprintActivatableAbility>("7902941ef70a0dc44bcfc174d6193386").Icon,
-                                                                      enhance_arrows_buff,
-                                                                      library.Get<BlueprintWeaponEnchantment>("3f032a3cd54e57649a0cdad0434bf221"),
-                                                                      1, enhance_arrows_enchancement_group);
-
-            var icy_burst = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsIcyBurst",
-                                                            "Enhance Arrows - Icy Burst",
-                                                            "At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: flaming burst, icy burst, or shocking burst. This ability replaces the ability gained at 3rd level.",
-                                                            library.Get<BlueprintActivatableAbility>("b338e43a8f81a2f43a73a4ae676353a5").Icon,
-                                                            enhance_arrows_buff,
-                                                            library.Get<BlueprintWeaponEnchantment>("564a6924b246d254c920a7c44bf2a58b"),
-                                                            1, enhance_arrows_enchancement_group);
-
-            var shocking_burst = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsShockingBurst",
-                                                            "Enhance Arrows - Shocking Burst",
-                                                            "At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: flaming burst, icy burst, or shocking burst. This ability replaces the ability gained at 3rd level.",
-                                                            library.Get<BlueprintActivatableAbility>("a3a9e9a2f909cd74e9aee7788a7ec0c6").Icon,
-                                                            enhance_arrows_buff,
-                                                            library.Get<BlueprintWeaponEnchantment>("914d7ee77fb09d846924ca08bccee0ff"),
-                                                            1, enhance_arrows_enchancement_group,
-                                                            AlignmentMaskType.Good);
-
-            var holy = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsHoly",
-                                                            "Enhance Arrows - Holy",
-                                                            "At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: anarchic, axiomatic, holy, or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment (for example, a lawful good arcane archer could not choose anarchic or unholy as his weapon quality).",
-                                                            library.Get<BlueprintActivatableAbility>("ce0ece459ebed9941bb096f559f36fa8").Icon,
-                                                            enhance_arrows_buff,
-                                                            library.Get<BlueprintWeaponEnchantment>("28a9964d81fedae44bae3ca45710c140"),
-                                                            2, enhance_arrows_enchancement_group,
-                                                            AlignmentMaskType.Evil);
-
-            var unholy = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsUnholy",
-                                                            "Enhance Arrows - Unholy",
-                                                            "At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: anarchic, axiomatic, holy, or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment (for example, a lawful good arcane archer could not choose anarchic or unholy as his weapon quality).",
-                                                            library.Get<BlueprintActivatableAbility>("561803a819460f34ea1fe079edabecce").Icon,
-                                                            enhance_arrows_buff,
-                                                            library.Get<BlueprintWeaponEnchantment>("d05753b8df780fc4bb55b318f06af453"),
-                                                            2, enhance_arrows_enchancement_group);
-
-            var axiomatic = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsAxiomatic",
-                                                            "Enhance Arrows - Axiomatic",
-                                                            "At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: anarchic, axiomatic, holy, or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment (for example, a lawful good arcane archer could not choose anarchic or unholy as his weapon quality).",
-                                                            library.Get<BlueprintActivatableAbility>("d76e8a80ab14ac942b6a9b8aaa5860b1").Icon,
-                                                            enhance_arrows_buff,
-                                                            library.Get<BlueprintWeaponEnchantment>("0ca43051edefcad4b9b2240aa36dc8d4"),
-                                                            2, enhance_arrows_enchancement_group,
-                                                            AlignmentMaskType.Lawful);
-
-            var anarchic = createEnhanceArrowsFeature("ArcaneArcherEnhanceArrowsAnarchic",
-                                                "Enhance Arrows - Anarchic",
-                                                "At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: anarchic, axiomatic, holy, or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment (for example, a lawful good arcane archer could not choose anarchic or unholy as his weapon quality).",
-                                                library.Get<BlueprintActivatableAbility>("8ed07b0cc56223c46953348f849f3309").Icon,
-                                                enhance_arrows_buff,
-                                                library.Get<BlueprintWeaponEnchantment>("57315bc1e1f62a741be0efde688087e9"),
-                                                2, enhance_arrows_enchancement_group,
-                                                AlignmentMaskType.Chaotic);
-
-            enhance_arrows_resource = Helpers.CreateAbilityResource("ArcaneArcherEnhanceArrowsResource", "", "", "", null);
-            enhance_arrows_resource.SetIncreasedByLevel(0, 1, arcanearcherArray);
-
-            var enhance_arrows_ability = Helpers.CreateActivatableAbility("ArcaneArcherEnhanceArrowsToggleAbility",
-                                                                         enhance_arrows_buff.Name,
-                                                                         enhance_arrows_buff.Description,
-                                                                         "",
-                                                                         enhance_arrows_buff.Icon,
-                                                                         enhance_arrows_buff,
-                                                                         AbilityActivationType.Immediately,
-                                                                         CommandType.Swift,
-                                                                         null,
-                                                                         Helpers.CreateActivatableResourceLogic(enhance_arrows_resource, ResourceSpendType.TurnOn),
-                                                                         Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
-
-            arcane_archer_enhance_arrow_elemental = Helpers.CreateFeature("ArcaneArcherEnhanceArrows3Feature",
-                                                            "Enhance arrows (elemental)",
-                                                            enhance_arrows_ability.Description,
-                                                            "",
-                                                            enhance_arrows_ability.Icon,
-                                                            FeatureGroup.None,
-                                                            Helpers.CreateAddAbilityResource(enhance_arrows_resource),
-                                                            Helpers.CreateAddFacts(flaming, frost, shock)
-                                                            );
-
-
-            // arcane_archer_enhance_arrow_distance should be distance but that isn't a thing in the game.
-            // arcane_archer_enhance_arrow_distance = Helpers.CreateFeature("ArcaneArcherEnhanceArrows5Feature",
-            //                                                                 "Enhance arrows (distance)",
-            //                                                                 enhance_arrows_ability.Description,
-            //                                                                 "",
-            //                                                                 enhance_arrows_ability.Icon,
-            //                                                                 FeatureGroup.None,
-            //                                                                 Common.createIncreaseActivatableAbilityGroupSize(enhance_arrows_enchancement_group)
-            //                                                                 );
-
-            arcane_archer_enhance_arrow_burst = Helpers.CreateFeature("ArcaneArcherEnhanceArrows7Feature",
-                                                                            "Enhance arrows (elemental burst)",
-                                                                            enhance_arrows_ability.Description,
-                                                                            "",
-                                                                            enhance_arrows_ability.Icon,
-                                                                            FeatureGroup.None,
-                                                                            Common.createIncreaseActivatableAbilityGroupSize(enhance_arrows_enchancement_group),
-                                                                            Helpers.CreateAddFacts(flaming_burst, icy_burst, shocking_burst)
-                                                                            );
-
-            arcane_archer_enhance_arrow_aligned = Helpers.CreateFeature("ArcaneArcherEnhanceArrows9Feature",
-                                                                            "Enhance arrows (aligned)",
-                                                                            enhance_arrows_ability.Description,
-                                                                            "",
-                                                                            enhance_arrows_ability.Icon,
-                                                                            FeatureGroup.None,
-                                                                            Common.createIncreaseActivatableAbilityGroupSize(enhance_arrows_enchancement_group),
-                                                                            Helpers.CreateAddFacts(holy, unholy, axiomatic, anarchic));
-        }
-
-
-
-
 
         static BlueprintFeature CreateImbueArrow(BlueprintWeaponType[] allowed_weapons)
         {
@@ -577,4 +331,42 @@ namespace CallOfTheWild
 
         public void OnEventDidTrigger(RuleCalculateAttackBonusWithoutTarget evt) { }
     }
+
+    public class EnhanceArrowsElemental : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleCalculateWeaponStats>
+    {
+        public BlueprintWeaponType[] weapon_types;
+        public DamageEnergyType damage_type;
+
+        public void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
+        {
+            var bonus_damage = Helpers.CreateActionDealDamage(DamageEnergyType.Fire, Helpers.CreateContextDiceValue(DiceType.D6, Helpers.CreateContextValue(AbilityRankType.DamageBonus)));
+            var bonus_damage_action = Helpers.CreateActionList(bonus_damage);
+            if (!Array.Exists(weapon_types, t => t == evt.Weapon.Blueprint.Type))
+            {
+                return;
+            }
+
+            foreach (var e in evt.Weapon.Enchantments)
+            {
+                if (e.Blueprint.GetComponent<WeaponEnergyDamageDice>() != null) { if (e.Blueprint.GetComponent<WeaponEnergyDamageDice>().Element == damage_type) { return; } }
+            }
+            Log.Write("applying elemental damage bonus");
+            DamageDescription damageDescription = new DamageDescription()
+            {
+                TypeDescription = new DamageTypeDescription()
+                {
+                    Type = DamageType.Energy,
+                    Energy = damage_type
+                },
+                Dice = new DiceFormula(1, DiceType.D6)
+            };
+            evt.DamageDescription.Add(damageDescription);
+        }
+
+        public void OnEventDidTrigger(RuleCalculateWeaponStats evt) { }
+
+    }
+
 }
+
+

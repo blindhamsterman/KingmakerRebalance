@@ -197,37 +197,68 @@ namespace CallOfTheWild
         {
             var resource = Helpers.CreateAbilityResource("EnhanceArrowsElementalResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
             resource.SetFixedResource(1);
-            var ability = Helpers.CreateAbility("EnhanceArrowsFireAbility", "Enhance Arrows (Fire)",
-                $"Whilst active, your arrows deal 1d6 additional Fire damage.",
-                "5e5f8a964e21460399018c65da9f26e7", Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), AbilityType.Special, CommandType.Free,
-                AbilityRange.Weapon, "Permenant", "N/A", Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Fire; }));
-            var ability2 = Helpers.CreateAbility("EnhanceArrowsFrostAbility", "Enhance Arrows (Frost)",
-                $"Whilst active, your arrows deal 1d6 additional Frost damage.",
-                "1394d9a00c9b493286f07fc5e038753a", Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), AbilityType.Special, CommandType.Free,
-                AbilityRange.Weapon, "Permenant", "N/A", Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Cold; }));
-            var ability3 = Helpers.CreateAbility("EnhanceArrowsShockAbility", "Enhance Arrows (Shock)",
-                $"Whilst active, your arrows deal 1d6 additional Shock damage.",
-                "6f6ae2b441f54c8b984633825f80e11f", Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), AbilityType.Special, CommandType.Free,
-                AbilityRange.Weapon, "Permenant", "N/A", Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
+            var name = "EnhanceArrows";
+            var displayName = "Enhance Arrows";
+            var fireArrowBuff = Helpers.CreateBuff(name + "Fire" + "Buff", displayName + " (Fire)", $"Whilst active, your arrows deal 1d6 additional Fire damage.", "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Fire; }));
+            var FrostArrowBuff = Helpers.CreateBuff(name + "Frost" + "Buff", displayName + " (Frost)", $"Whilst active, your arrows deal 1d6 additional Frost damage.", "",
+                        Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Cold; }));
+            var ShockArrowBuff = Helpers.CreateBuff(name + "Shock" + "Buff", displayName + " (Shock)", $"Whilst active, your arrows deal 1d6 additional Shock damage.", "",
+                        Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
+
+            var abilityFire = Helpers.CreateActivatableAbility("EnhanceArrowsFireAbility",
+                                                                      fireArrowBuff.Name,
+                                                                      fireArrowBuff.Description,
+                                                                      "",
+                                                                      fireArrowBuff.Icon,
+                                                                      fireArrowBuff,
+                                                                      AbilityActivationType.Immediately,
+                                                                      CommandType.Free,
+                                                                      null,
+                                                                      Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.TurnOn),
+                                                                      Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
+            var abilityFrost = Helpers.CreateActivatableAbility("EnhanceArrowsFrostAbility",
+                                                          FrostArrowBuff.Name,
+                                                          FrostArrowBuff.Description,
+                                                          "",
+                                                          FrostArrowBuff.Icon,
+                                                          FrostArrowBuff,
+                                                          AbilityActivationType.Immediately,
+                                                          CommandType.Free,
+                                                          null,
+                                                          Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.TurnOn),
+                                                          Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
+            var abilityShock = Helpers.CreateActivatableAbility("EnhanceArrowsShockAbility",
+                                                                    ShockArrowBuff.Name,
+                                                                    ShockArrowBuff.Description,
+                                                                    "",
+                                                                    ShockArrowBuff.Icon,
+                                                                    ShockArrowBuff,
+                                                                    AbilityActivationType.Immediately,
+                                                                    CommandType.Free,
+                                                                    null,
+                                                                    Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.TurnOn),
+                                                                    Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
+
             return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
                 $"At 3rd level, In addition, the arcane archer’s arrows gain a number of additional qualities as he gains additional " +
                 "levels. The elemental, elemental burst, and aligned qualities can be changed once per day, when the arcane archer prepares " +
                 "spells or, in the case of spontaneous spellcasters, after 8 hours of rest." +
                 "\n At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock.",
-                "dc982851404b45388eca6fc8deacebcb",
+                "",
                 Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
                 FeatureGroup.None,
-                Helpers.CreateAddFact(ability),
-                Helpers.CreateAddFact(ability2),
-                Helpers.CreateAddFact(ability3),
+                Helpers.CreateAddFact(abilityFire),
+                Helpers.CreateAddFact(abilityFrost),
+                Helpers.CreateAddFact(abilityShock),
                 Helpers.CreateAddAbilityResource(resource));
         }
 
-        static BlueprintFeature CreateSpellbookChoice()
+        static BlueprintFeatureSelection CreateSpellbookChoice()
         {
             var comps = new List<BlueprintComponent>();
             var compsArray = comps.ToArray();
-            var aa_progression = Helpers.CreateFeature("ArcaneArcherSpellbookSelection",
+            var aa_progression = Helpers.CreateFeatureSelection("ArcaneArcherSpellbookSelection",
             "Arcane Spellcasting",
             $"At 2nd level, and at every level thereafter, with an exception for 5th and 9th levels, " +
                                        "an Arcane Archer  gains new spells per day as if he had also gained a level in an arcane spellcasting " +
@@ -279,7 +310,7 @@ namespace CallOfTheWild
                                        LoadIcons.Image2Sprite.Create(@"FeatIcons/Icon_Casting_Combat.png"),
                                        FeatureGroup.Feat, compsArray);
             aa_feat.IsClassFeature = true;
-            
+
             aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("9c928dc570bb9e54a9649b3ebfe47a41")); //RapidShotFeature
             aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("05a3b543b0a0a0346a5061e90f293f0b")); //PointBlankMaster
             aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("adf54af2a681792489826f7fd1b62889")); //Manyshot

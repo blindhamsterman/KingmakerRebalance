@@ -38,6 +38,8 @@ namespace CallOfTheWild
         internal static BlueprintCharacterClass arcanearcher;
         internal static BlueprintCharacterClass[] arcanearcherArray;
 
+        static internal ActivatableAbilityGroup enhance_arrows_elemental_group = ActivatableAbilityGroupExtension.EnhanceArrowsElemental.ToActivatableAbilityGroup();//ActivatableAbilityGroup.TrueMagus;
+
         internal static void Load()
         {
             var library = Main.library;
@@ -206,17 +208,20 @@ namespace CallOfTheWild
             var ShockArrowBuff = Helpers.CreateBuff(name + "Shock" + "Buff", displayName + " (Shock)", $"Whilst active, your arrows deal 1d6 additional Shock damage.", "",
                         Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
 
+            // for the time being the ability allows the character to switch which kind of arrows are being used at will, this is because there is strange behaviour where if the resource
+            // gets spent, the buff turns off instantly.
             var abilityFire = Helpers.CreateActivatableAbility("EnhanceArrowsFireAbility",
-                                                                      fireArrowBuff.Name,
-                                                                      fireArrowBuff.Description,
-                                                                      "",
-                                                                      fireArrowBuff.Icon,
-                                                                      fireArrowBuff,
-                                                                      AbilityActivationType.Immediately,
-                                                                      CommandType.Free,
-                                                                      null,
-                                                                      Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.TurnOn),
-                                                                      Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
+                                                                                 fireArrowBuff.Name,
+                                                                                 fireArrowBuff.Description,
+                                                                                 "",
+                                                                                 fireArrowBuff.Icon,
+                                                                                 fireArrowBuff,
+                                                                                 AbilityActivationType.Immediately,
+                                                                                 CommandType.Free,
+                                                                                 null,
+                                                                                 Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.Never)
+                                                                               );
+
             var abilityFrost = Helpers.CreateActivatableAbility("EnhanceArrowsFrostAbility",
                                                           FrostArrowBuff.Name,
                                                           FrostArrowBuff.Description,
@@ -226,8 +231,7 @@ namespace CallOfTheWild
                                                           AbilityActivationType.Immediately,
                                                           CommandType.Free,
                                                           null,
-                                                          Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.TurnOn),
-                                                          Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
+                                                          Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.Never));
             var abilityShock = Helpers.CreateActivatableAbility("EnhanceArrowsShockAbility",
                                                                     ShockArrowBuff.Name,
                                                                     ShockArrowBuff.Description,
@@ -237,10 +241,10 @@ namespace CallOfTheWild
                                                                     AbilityActivationType.Immediately,
                                                                     CommandType.Free,
                                                                     null,
-                                                                    Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.TurnOn),
-                                                                    Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
+                                                                    Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.Never));
 
-            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
+
+            var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
                 $"At 3rd level, In addition, the arcane archer’s arrows gain a number of additional qualities as he gains additional " +
                 "levels. The elemental, elemental burst, and aligned qualities can be changed once per day, when the arcane archer prepares " +
                 "spells or, in the case of spontaneous spellcasters, after 8 hours of rest." +
@@ -252,6 +256,12 @@ namespace CallOfTheWild
                 Helpers.CreateAddFact(abilityFrost),
                 Helpers.CreateAddFact(abilityShock),
                 Helpers.CreateAddAbilityResource(resource));
+
+            // abilityFire.WeightInGroup = group_size;
+            abilityFire.Group = enhance_arrows_elemental_group;
+            abilityFrost.Group = enhance_arrows_elemental_group;
+            abilityShock.Group = enhance_arrows_elemental_group;
+            return feat;
         }
 
         static BlueprintFeatureSelection CreateSpellbookChoice()
@@ -271,7 +281,6 @@ namespace CallOfTheWild
                                        LoadIcons.Image2Sprite.Create(@"FeatIcons/Icon_Casting_Combat.png"),
                                        FeatureGroup.None, compsArray);
             aa_progression.IsClassFeature = true;
-            // aa_progression.ComponentsArray.AddToArray(Helpers.Create<SkipLevelsForSpellProgression>(s => s.Levels = skipLevels.ToArray()));
             return aa_progression;
         }
 
@@ -400,7 +409,6 @@ namespace CallOfTheWild
             {
                 if (e.Blueprint.GetComponent<WeaponEnhancementBonus>() != null) { return; }
             }
-            Log.Write("applying damage bonus");
             evt.AddBonusDamage(1);
             evt.Enhancement = 1;
         }
@@ -418,7 +426,6 @@ namespace CallOfTheWild
             {
                 if (e.Blueprint.GetComponent<WeaponEnhancementBonus>() != null || e.Blueprint.GetComponent<WeaponMasterwork>() != null) { return; }
             }
-            Log.Write("applying attack bonus");
             evt.AddBonus(1, Fact);
         }
 
@@ -433,6 +440,7 @@ namespace CallOfTheWild
 
         public void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
         {
+
             var bonus_damage = Helpers.CreateActionDealDamage(DamageEnergyType.Fire, Helpers.CreateContextDiceValue(DiceType.D6, Helpers.CreateContextValue(AbilityRankType.DamageBonus)));
             var bonus_damage_action = Helpers.CreateActionList(bonus_damage);
             if (!Array.Exists(weapon_types, t => t == evt.Weapon.Blueprint.Type))
@@ -444,7 +452,7 @@ namespace CallOfTheWild
             {
                 if (e.Blueprint.GetComponent<WeaponEnergyDamageDice>() != null) { if (e.Blueprint.GetComponent<WeaponEnergyDamageDice>().Element == damage_type) { return; } }
             }
-            Log.Write("applying elemental damage bonus");
+
             DamageDescription damageDescription = new DamageDescription()
             {
                 TypeDescription = new DamageTypeDescription()

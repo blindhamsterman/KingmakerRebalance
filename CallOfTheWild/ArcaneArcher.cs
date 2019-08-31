@@ -13,7 +13,6 @@ using Kingmaker.Enums;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
-using Kingmaker.UI.AbilityTarget;
 using System;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.Utility;
@@ -21,6 +20,7 @@ using Kingmaker.Enums.Damage;
 using Kingmaker.UnitLogic;
 using System.Collections.Generic;
 using Kingmaker.RuleSystem.Rules.Damage;
+using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using static Kingmaker.UnitLogic.ActivatableAbilities.ActivatableAbilityResourceLogic;
 using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
@@ -202,45 +202,36 @@ namespace CallOfTheWild
             var displayName = "Enhance Arrows";
             var fireArrowBuff = Helpers.CreateBuff(name + "Fire" + "Buff", displayName + " (Fire)", $"Whilst active, your arrows deal 1d6 additional Fire damage.", "",
             Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Fire; }));
-            var FrostArrowBuff = Helpers.CreateBuff(name + "Frost" + "Buff", displayName + " (Frost)", $"Whilst active, your arrows deal 1d6 additional Frost damage.", "",
+            var frostArrowBuff = Helpers.CreateBuff(name + "Frost" + "Buff", displayName + " (Frost)", $"Whilst active, your arrows deal 1d6 additional Frost damage.", "",
                         Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Cold; }));
-            var ShockArrowBuff = Helpers.CreateBuff(name + "Shock" + "Buff", displayName + " (Shock)", $"Whilst active, your arrows deal 1d6 additional Shock damage.", "",
+            var shockArrowBuff = Helpers.CreateBuff(name + "Shock" + "Buff", displayName + " (Shock)", $"Whilst active, your arrows deal 1d6 additional Shock damage.", "",
                         Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
 
-            // for the time being the ability allows the character to switch which kind of arrows are being used at will, this is because there is strange behaviour where if the resource
-            // gets spent, the buff turns off instantly.
-            var abilityFire = Helpers.CreateActivatableAbility("EnhanceArrowsFireAbility",
-                                                                                 fireArrowBuff.Name,
-                                                                                 fireArrowBuff.Description,
-                                                                                 "",
-                                                                                 fireArrowBuff.Icon,
-                                                                                 fireArrowBuff,
-                                                                                 AbilityActivationType.Immediately,
-                                                                                 CommandType.Free,
-                                                                                 null,
-                                                                                 Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.Never)
-                                                                               );
+            var actionFire = Helpers.CreateRunActions(Common.createContextActionApplyBuff(fireArrowBuff, 
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false), 
+            Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
+            
+            var abilityFire = Helpers.CreateAbility("EnhanceArrowsFireAbility",
+                                                                    fireArrowBuff.Name,
+                                                                    fireArrowBuff.Description, "", fireArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                AbilityRange.Weapon, "Permanent", "N/A", actionFire, Helpers.CreateResourceLogic(resource));
 
-            var abilityFrost = Helpers.CreateActivatableAbility("EnhanceArrowsFrostAbility",
-                                                          FrostArrowBuff.Name,
-                                                          FrostArrowBuff.Description,
-                                                          "",
-                                                          FrostArrowBuff.Icon,
-                                                          FrostArrowBuff,
-                                                          AbilityActivationType.Immediately,
-                                                          CommandType.Free,
-                                                          null,
-                                                          Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.Never));
-            var abilityShock = Helpers.CreateActivatableAbility("EnhanceArrowsShockAbility",
-                                                                    ShockArrowBuff.Name,
-                                                                    ShockArrowBuff.Description,
-                                                                    "",
-                                                                    ShockArrowBuff.Icon,
-                                                                    ShockArrowBuff,
-                                                                    AbilityActivationType.Immediately,
-                                                                    CommandType.Free,
-                                                                    null,
-                                                                    Helpers.CreateActivatableResourceLogic(resource, ResourceSpendType.Never));
+            var actionFrost = Helpers.CreateRunActions(Common.createContextActionApplyBuff(frostArrowBuff, 
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false), 
+            Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(fireArrowBuff));
+            var abilityFrost = Helpers.CreateAbility("EnhanceArrowsFrostAbility",
+                                                                    frostArrowBuff.Name,
+                                                                    frostArrowBuff.Description, "", frostArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                AbilityRange.Weapon, "Permanent", "N/A", actionFrost, Helpers.CreateResourceLogic(resource));
+
+            var actionShock = Helpers.CreateRunActions(Common.createContextActionApplyBuff(shockArrowBuff, 
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false), 
+            Common.createContextActionRemoveBuff(fireArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
+            var abilityShock = Helpers.CreateAbility("EnhanceArrowsShockAbility",
+                                                                    shockArrowBuff.Name,
+                                                                    shockArrowBuff.Description, "", shockArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                AbilityRange.Weapon, "Permanent", "N/A", actionShock, Helpers.CreateResourceLogic(resource));
+
 
 
             var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
@@ -257,13 +248,13 @@ namespace CallOfTheWild
                 Helpers.CreateAddAbilityResource(resource));
 
             // abilityFire.WeightInGroup = group_size;
-            abilityFire.IsOnByDefault = true;
-            abilityFire.DeactivateImmediately = true;
-            abilityFrost.DeactivateImmediately = true;
-            abilityShock.DeactivateImmediately = true;
-            abilityFire.Group = enhance_arrows_elemental_group;
-            abilityFrost.Group = enhance_arrows_elemental_group;
-            abilityShock.Group = enhance_arrows_elemental_group;
+            // abilityFire.IsOnByDefault = true;
+            // abilityFire.DeactivateImmediately = true;
+            // abilityFrost.DeactivateImmediately = true;
+            // // abilityShock.DeactivateImmediately = true;
+            // abilityFire.Group = enhance_arrows_elemental_group;
+            // abilityFrost.Group = enhance_arrows_elemental_group;
+            // abilityShock.Group = enhance_arrows_elemental_group;
             return feat;
         }
 

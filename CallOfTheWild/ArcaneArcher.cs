@@ -138,7 +138,7 @@ namespace CallOfTheWild
                 Helpers.LevelEntry(6),// , CreatePhaseArrow(allowed_weapons)),
                 Helpers.LevelEntry(7, CreateEnhanceArrowsBurst()),
                 Helpers.LevelEntry(8),// , CreateHailOfArrows(allowed_weapons)),
-                Helpers.LevelEntry(9),// , CreateEnhanceArrows(allowed_weapons)),
+                Helpers.LevelEntry(9, CreateEnhanceArrowsAligned(allowed_weapons)),
                 Helpers.LevelEntry(10),//,  CreateArrowOfDeath(allowed_weapons)),
             };
 
@@ -245,6 +245,83 @@ namespace CallOfTheWild
                 Helpers.CreateAddFact(abilityFire),
                 Helpers.CreateAddFact(abilityFrost),
                 Helpers.CreateAddFact(abilityShock),
+                Helpers.CreateAddAbilityResource(resource));
+            return feat;
+        }
+
+        static BlueprintFeature CreateEnhanceArrowsAligned(BlueprintWeaponType[] allowed_weapons)
+        {
+            var resource = Helpers.CreateAbilityResource("EnhanceArrowsAlignedResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
+            resource.SetFixedResource(1);
+            var name = "EnhanceArrows";
+            var displayName = "Enhance Arrows";
+
+            //buffs
+            var holyArrowBuff = Helpers.CreateBuff(name + "Holy" + "Buff", displayName + " (Holy)",
+            $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of evil alignment", "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null,
+            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Holy; }));
+            var unholyArrowBuff = Helpers.CreateBuff(name + "Unoly" + "Buff", displayName + " (Unoly)",
+            $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of good alignment", "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null,
+            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Unholy; }));
+            var anarchicArrowBuff = Helpers.CreateBuff(name + "Anarchic" + "Buff", displayName + " (Anarchic)",
+            $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of lawful alignment", "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null,
+            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Anarchic"; u.damage_type = DamageEnergyType.Unholy; }));
+            var axiomaticArrowBuff = Helpers.CreateBuff(name + "Axiomic" + "Buff", displayName + " (Axiomic)",
+            $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of chaotic alignment", "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null,
+            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Axiomic"; u.damage_type = DamageEnergyType.Holy; }));
+
+            //actions
+            var actionHoly = Helpers.CreateRunActions(Common.createContextActionApplyBuff(holyArrowBuff,
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+            Common.createContextActionRemoveBuff(unholyArrowBuff), Common.createContextActionRemoveBuff(anarchicArrowBuff),
+            Common.createContextActionRemoveBuff(axiomaticArrowBuff));
+            var actionUnholy = Helpers.CreateRunActions(Common.createContextActionApplyBuff(unholyArrowBuff,
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+            Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(anarchicArrowBuff),
+            Common.createContextActionRemoveBuff(axiomaticArrowBuff));
+            var actionAnarchic = Helpers.CreateRunActions(Common.createContextActionApplyBuff(anarchicArrowBuff,
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+            Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(unholyArrowBuff),
+            Common.createContextActionRemoveBuff(axiomaticArrowBuff));
+            var actionAxiomatic = Helpers.CreateRunActions(Common.createContextActionApplyBuff(axiomaticArrowBuff,
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+            Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(unholyArrowBuff),
+            Common.createContextActionRemoveBuff(anarchicArrowBuff));
+
+            //abilities
+            var abilityHoly = Helpers.CreateAbility("EnhanceArrowsHolyAbility",
+                            holyArrowBuff.Name,
+                            holyArrowBuff.Description, "", holyArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            AbilityRange.Weapon, "Permanent", "N/A", actionHoly, Helpers.CreateResourceLogic(resource));
+            var abilityUnoly = Helpers.CreateAbility("EnhanceArrowsUnholyAbility",
+                            unholyArrowBuff.Name,
+                            unholyArrowBuff.Description, "", unholyArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            AbilityRange.Weapon, "Permanent", "N/A", actionUnholy, Helpers.CreateResourceLogic(resource));
+            var abilityAnarchic = Helpers.CreateAbility("EnhanceArrowsAnarchicAbility",
+                            anarchicArrowBuff.Name,
+                            anarchicArrowBuff.Description, "", anarchicArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            AbilityRange.Weapon, "Permanent", "N/A", actionAnarchic, Helpers.CreateResourceLogic(resource));
+            var abilityAxiomatic = Helpers.CreateAbility("EnhanceArrowsAxiomaticAbility",
+                            axiomaticArrowBuff.Name,
+                            axiomaticArrowBuff.Description, "", axiomaticArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            AbilityRange.Weapon, "Permanent", "N/A", actionAxiomatic, Helpers.CreateResourceLogic(resource));
+
+            //feature
+            var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsAligned", "Enhance Arrows (Aligned)",
+                $"At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: " +
+                "anarchic, axiomatic, holy, or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment " +
+                "(for example, a lawful good arcane archer could not choose anarchic or unholy as his weapon quality).",
+                "",
+                Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+                FeatureGroup.None,
+                Helpers.CreateAddFact(abilityHoly),
+                Helpers.CreateAddFact(abilityUnoly),
+                Helpers.CreateAddFact(abilityAnarchic),
+                Helpers.CreateAddFact(abilityAxiomatic),
                 Helpers.CreateAddAbilityResource(resource));
             return feat;
         }
@@ -453,6 +530,11 @@ namespace CallOfTheWild
 
         public void OnEventAboutToTrigger(RuleDealDamage evt)
         {
+            var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
+            if (!Array.Exists(weapon_types, t => t == weapon.Blueprint.Type))
+            {
+                return;
+            }
             if (Owner.Progression.GetClassLevel(library.Get<BlueprintCharacterClass>("0fbf5e3fe02f4db19492659dc8a3c411")) >= 7)
             {
                 RuleAttackRoll attackRoll = evt.AttackRoll;
@@ -460,7 +542,6 @@ namespace CallOfTheWild
                 {
                     return;
                 }
-                var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
                 RuleCalculateWeaponStats ruleCalculateWeaponStats = Rulebook.Trigger<RuleCalculateWeaponStats>(new RuleCalculateWeaponStats(evt.Initiator, weapon, null));
                 DiceFormula dice = new DiceFormula(Math.Max(ruleCalculateWeaponStats.CriticalMultiplier - 1, 1), DiceType.D10);
                 evt.DamageBundle.Add(new EnergyDamage(dice, damage_type));
@@ -470,6 +551,64 @@ namespace CallOfTheWild
 
         public void OnEventDidTrigger(RuleDealDamage evt) { }
 
+    }
+
+    public class EnhanceArrowsAligned : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleDealDamage>
+    {
+        public BlueprintWeaponType[] weapon_types;
+        public string alignment;
+        public DamageEnergyType damage_type;
+        static LibraryScriptableObject library => Main.library;
+        public void OnEventAboutToTrigger(RuleDealDamage evt)
+        {
+            var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
+            if (!Array.Exists(weapon_types, t => t == weapon.Blueprint.Type))
+            {
+                return;
+            }
+            if (alignment == "Holy")
+            {
+                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
+                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
+                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                {
+                    { return; }
+                }
+            }
+            if (alignment == "Unholy")
+            {
+                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
+                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
+                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                {
+                    { return; }
+                }
+            }
+            if (alignment == "Anarchic")
+            {
+                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
+                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
+                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                {
+                    { return; }
+                }
+            }
+            if (alignment == "Axiomatic")
+            {
+                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
+                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
+                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                {
+                    { return; }
+                }
+            }
+
+            RuleCalculateWeaponStats ruleCalculateWeaponStats = Rulebook.Trigger<RuleCalculateWeaponStats>(new RuleCalculateWeaponStats(evt.Initiator, weapon, null));
+            var dice = new DiceFormula(2, DiceType.D6);
+            evt.DamageBundle.Add(new EnergyDamage(dice, damage_type));
+        }
+
+        public void OnEventDidTrigger(RuleDealDamage evt) { }
     }
 
 

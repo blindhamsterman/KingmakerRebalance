@@ -131,12 +131,12 @@ namespace CallOfTheWild
                 Helpers.LevelEntry(1, proficiencies, CreateSpellbookChoice(), CreateEnhanceArrowsMagic(allowed_weapons),
                                    library.Get<BlueprintFeature>("d3e6275cfa6e7a04b9213b7b292a011c"), // ray calculate feature
                                    library.Get<BlueprintFeature>("62ef1cdb90f1d654d996556669caf7fa")),
-                Helpers.LevelEntry(2, CreateImbueArrow(allowed_weapons)), // Eldritch Archer Ranged Spellstrike //CreateImbueArrow(allowed_weapons)),
+                Helpers.LevelEntry(2, CreateImbueArrow(allowed_weapons)),
                 Helpers.LevelEntry(3, CreateEnhanceArrowsElemental(allowed_weapons)),
                 Helpers.LevelEntry(4),// , CreateSeekerArrow(allowed_weapons)),
                 Helpers.LevelEntry(5, CreateArcheryFeatSelection()), // Distant arrows aren't possible, providing a feat for this level seems reasonable seeing as the class also doesn't get spellcasting here.
                 Helpers.LevelEntry(6),// , CreatePhaseArrow(allowed_weapons)),
-                Helpers.LevelEntry(7),// , CreateEnhanceArrows(allowed_weapons)),
+                Helpers.LevelEntry(7, CreateEnhanceArrowsBurst()),
                 Helpers.LevelEntry(8),// , CreateHailOfArrows(allowed_weapons)),
                 Helpers.LevelEntry(9),// , CreateEnhanceArrows(allowed_weapons)),
                 Helpers.LevelEntry(10),//,  CreateArrowOfDeath(allowed_weapons)),
@@ -207,25 +207,25 @@ namespace CallOfTheWild
             var shockArrowBuff = Helpers.CreateBuff(name + "Shock" + "Buff", displayName + " (Shock)", $"Whilst active, your arrows deal 1d6 additional Shock damage.", "",
                         Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
 
-            var actionFire = Helpers.CreateRunActions(Common.createContextActionApplyBuff(fireArrowBuff, 
-            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false), 
+            var actionFire = Helpers.CreateRunActions(Common.createContextActionApplyBuff(fireArrowBuff,
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
             Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
-            
+
             var abilityFire = Helpers.CreateAbility("EnhanceArrowsFireAbility",
                                                                     fireArrowBuff.Name,
                                                                     fireArrowBuff.Description, "", fireArrowBuff.Icon, AbilityType.Special, CommandType.Free,
                 AbilityRange.Weapon, "Permanent", "N/A", actionFire, Helpers.CreateResourceLogic(resource));
 
-            var actionFrost = Helpers.CreateRunActions(Common.createContextActionApplyBuff(frostArrowBuff, 
-            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false), 
+            var actionFrost = Helpers.CreateRunActions(Common.createContextActionApplyBuff(frostArrowBuff,
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
             Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(fireArrowBuff));
             var abilityFrost = Helpers.CreateAbility("EnhanceArrowsFrostAbility",
                                                                     frostArrowBuff.Name,
                                                                     frostArrowBuff.Description, "", frostArrowBuff.Icon, AbilityType.Special, CommandType.Free,
                 AbilityRange.Weapon, "Permanent", "N/A", actionFrost, Helpers.CreateResourceLogic(resource));
 
-            var actionShock = Helpers.CreateRunActions(Common.createContextActionApplyBuff(shockArrowBuff, 
-            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false), 
+            var actionShock = Helpers.CreateRunActions(Common.createContextActionApplyBuff(shockArrowBuff,
+            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
             Common.createContextActionRemoveBuff(fireArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
             var abilityShock = Helpers.CreateAbility("EnhanceArrowsShockAbility",
                                                                     shockArrowBuff.Name,
@@ -246,16 +246,27 @@ namespace CallOfTheWild
                 Helpers.CreateAddFact(abilityFrost),
                 Helpers.CreateAddFact(abilityShock),
                 Helpers.CreateAddAbilityResource(resource));
-
-            // abilityFire.WeightInGroup = group_size;
-            // abilityFire.IsOnByDefault = true;
-            // abilityFire.DeactivateImmediately = true;
-            // abilityFrost.DeactivateImmediately = true;
-            // // abilityShock.DeactivateImmediately = true;
-            // abilityFire.Group = enhance_arrows_elemental_group;
-            // abilityFrost.Group = enhance_arrows_elemental_group;
-            // abilityShock.Group = enhance_arrows_elemental_group;
             return feat;
+        }
+
+        static BlueprintFeature CreateEnhanceArrowsBurst()
+        {
+            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsBurst", "Enhance Arrows (Burst)",
+                $"At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: " +
+                "flaming burst, icy burst, or shocking burst. This ability replaces the ability gained at 3rd level.",
+                "",
+                Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+                FeatureGroup.None);
+        }
+
+        // Not currently using this feature, if we can find a way to get it to work, then it may get added.
+        static BlueprintFeature CreateEnhanceArrowsDistance()
+        {
+            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsDistance", "Enhance Arrows (Distance)",
+                $"At 5th level, every non-magical arrow fired by an arcane archer gains the distance weapon quality.",
+                "",
+                Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+                FeatureGroup.None);
         }
 
         static BlueprintFeatureSelection CreateSpellbookChoice()
@@ -331,55 +342,8 @@ namespace CallOfTheWild
 
         static BlueprintFeatureSelection CreateArcheryFeatSelection()
         {
-            var comps = new List<BlueprintComponent>();
-            var compsArray = comps.ToArray();
-            var aa_feat = Helpers.CreateFeatureSelection("ArcaneArcherFeat",
-            "Arcane Archery Feat",
-            $"At 5th level an arcane archer gains an additional archery or spellcasting feat. ",
-                                       "c7179c618cc84a9283ceb95f2f4fcc46",
-                                       LoadIcons.Image2Sprite.Create(@"FeatIcons/Icon_Casting_Combat.png"),
-                                       FeatureGroup.Feat, compsArray);
-            aa_feat.IsClassFeature = true;
-
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("9c928dc570bb9e54a9649b3ebfe47a41")); //RapidShotFeature
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("05a3b543b0a0a0346a5061e90f293f0b")); //PointBlankMaster
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("adf54af2a681792489826f7fd1b62889")); //Manyshot
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("f4201c85a991369408740c6888362e20")); //ImprovedCritical
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("46f970a6b9b5d2346b10892673fe6e74")); //ImprovedPreciseShot
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("38155ca9e4055bb48a89240a2055dcc3")); //AugmentSummoning
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("06964d468fde1dc4aa71a92ea04d930d")); //CombatCasting
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeatureSelection>("1c17446a3eb744f438488711b792ca4d")); //GreaterElementalFocusSelection z
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("1978c3f91cfbbc24b9c9b0d017f4beec")); //GreaterSpellPenetration
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("a1de1e4f92195b442adb946f0e2b9d4e")); //EmpowerSpellFeat
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("f180e72e4a9cbaa4da8be9bc958132ef")); //ExtendSpellFeat
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("2f5d1e705c7967546b72ad8218ccf99c")); //HeightenSpellFeat
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("7f2b282626862e345935bbea5e66424b")); //MaximizeSpellFeat
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("ef7ece7bb5bb66a41b256976b27f424e")); //QuickenSpellFeat
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("46fad72f54a33dc4692d3b62eca7bb78")); //ReachSpellFeat
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeatureSelection>("bb24cc01319528849b09a3ae8eec0b31")); //ElementalFocusSelection z
-            aa_feat.Features.AddToArray(library.Get<BlueprintParametrizedFeature>("16fa59cc9a72a6043b566b49184f53fe")); //SpellFocus
-            aa_feat.Features.AddToArray(library.Get<BlueprintFeature>("ee7dc126939e4d9438357fbd5980d459")); //SpellPenetration
-            aa_feat.Features.AddToArray(library.Get<BlueprintParametrizedFeature>("f327a765a4353d04f872482ef3e48c35")); //SpellSpecializationFirst z
-
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("9c928dc570bb9e54a9649b3ebfe47a41")); //RapidShotFeature
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("05a3b543b0a0a0346a5061e90f293f0b")); //PointBlankMaster
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("adf54af2a681792489826f7fd1b62889")); //Manyshot
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("f4201c85a991369408740c6888362e20")); //ImprovedCritical
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("46f970a6b9b5d2346b10892673fe6e74")); //ImprovedPreciseShot
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("38155ca9e4055bb48a89240a2055dcc3")); //AugmentSummoning
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("06964d468fde1dc4aa71a92ea04d930d")); //CombatCasting
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeatureSelection>("1c17446a3eb744f438488711b792ca4d")); //GreaterElementalFocusSelection z
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("1978c3f91cfbbc24b9c9b0d017f4beec")); //GreaterSpellPenetration
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("a1de1e4f92195b442adb946f0e2b9d4e")); //EmpowerSpellFeat
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("f180e72e4a9cbaa4da8be9bc958132ef")); //ExtendSpellFeat
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("2f5d1e705c7967546b72ad8218ccf99c")); //HeightenSpellFeat
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("7f2b282626862e345935bbea5e66424b")); //MaximizeSpellFeat
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("ef7ece7bb5bb66a41b256976b27f424e")); //QuickenSpellFeat
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("46fad72f54a33dc4692d3b62eca7bb78")); //ReachSpellFeat
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeatureSelection>("bb24cc01319528849b09a3ae8eec0b31")); //ElementalFocusSelection z
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintParametrizedFeature>("16fa59cc9a72a6043b566b49184f53fe")); //SpellFocus
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintFeature>("ee7dc126939e4d9438357fbd5980d459")); //SpellPenetration
-            aa_feat.AllFeatures.AddToArray(library.Get<BlueprintParametrizedFeature>("f327a765a4353d04f872482ef3e48c35")); //SpellSpecializationFirst z
+            var aa_feat = library.CopyAndAdd<BlueprintFeatureSelection>("6c799d09d5b93f344b9ade0e0c765c2d", "ArcaneArcherFeat", "c7179c618cc84a9283ceb95f2f4fcc46");//archery feat 6
+            aa_feat.SetDescription("At 5th level an arcane archer gains an additional archery feat.");
             return aa_feat;
         }
         static BlueprintFeature CreatePhaseArrow(BlueprintWeaponType[] allowed_weapons)
@@ -454,11 +418,11 @@ namespace CallOfTheWild
         public void OnEventDidTrigger(RuleCalculateAttackBonusWithoutTarget evt) { }
     }
 
-    public class EnhanceArrowsElemental : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleCalculateWeaponStats>
+    public class EnhanceArrowsElemental : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleCalculateWeaponStats>, IInitiatorRulebookHandler<RuleDealDamage>
     {
         public BlueprintWeaponType[] weapon_types;
         public DamageEnergyType damage_type;
-
+        static LibraryScriptableObject library => Main.library;
         public void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
         {
             if (!Array.Exists(weapon_types, t => t == evt.Weapon.Blueprint.Type))
@@ -482,12 +446,31 @@ namespace CallOfTheWild
             };
 
             evt.DamageDescription.Add(damageDescription);
+
         }
 
         public void OnEventDidTrigger(RuleCalculateWeaponStats evt) { }
 
-    }
+        public void OnEventAboutToTrigger(RuleDealDamage evt)
+        {
+            if (Owner.Progression.GetClassLevel(library.Get<BlueprintCharacterClass>("0fbf5e3fe02f4db19492659dc8a3c411")) >= 7)
+            {
+                RuleAttackRoll attackRoll = evt.AttackRoll;
+                if (base.Owner == null || attackRoll == null || !attackRoll.IsCriticalConfirmed || attackRoll.FortificationNegatesCriticalHit)
+                {
+                    return;
+                }
+                var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
+                RuleCalculateWeaponStats ruleCalculateWeaponStats = Rulebook.Trigger<RuleCalculateWeaponStats>(new RuleCalculateWeaponStats(evt.Initiator, weapon, null));
+                DiceFormula dice = new DiceFormula(Math.Max(ruleCalculateWeaponStats.CriticalMultiplier - 1, 1), DiceType.D10);
+                evt.DamageBundle.Add(new EnergyDamage(dice, damage_type));
 
+            }
+        }
+
+        public void OnEventDidTrigger(RuleDealDamage evt) { }
+
+    }
 
 
     public class ImbueArrows : OwnedGameLogicComponent<UnitDescriptor>, IAbilityTargetSelectionUIHandler, IGlobalSubscriber
@@ -495,7 +478,6 @@ namespace CallOfTheWild
     {
         public BlueprintWeaponType[] weapon_types;
         Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange range = Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Custom;
-
         Feet oldCustomRange = new Kingmaker.Utility.Feet(0);
         Feet newCustomRange = new Kingmaker.Utility.Feet(0);
 

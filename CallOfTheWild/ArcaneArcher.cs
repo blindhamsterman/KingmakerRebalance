@@ -564,36 +564,36 @@ namespace CallOfTheWild
             }
             if (alignment == "Holy")
             {
-                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
-                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
-                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                if (evt.Target.Blueprint.Alignment != Alignment.ChaoticEvil
+                || evt.Target.Blueprint.Alignment != Alignment.LawfulEvil
+                || evt.Target.Blueprint.Alignment != Alignment.NeutralEvil)
                 {
                     { return; }
                 }
             }
             if (alignment == "Unholy")
             {
-                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
-                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
-                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                if (evt.Target.Blueprint.Alignment != Alignment.ChaoticGood
+                || evt.Target.Blueprint.Alignment != Alignment.LawfulGood
+                || evt.Target.Blueprint.Alignment != Alignment.NeutralGood)
                 {
                     { return; }
                 }
             }
             if (alignment == "Anarchic")
             {
-                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
-                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
-                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                if (evt.Target.Blueprint.Alignment != Alignment.LawfulGood
+                || evt.Target.Blueprint.Alignment != Alignment.LawfulNeutral
+                || evt.Target.Blueprint.Alignment != Alignment.LawfulEvil)
                 {
                     { return; }
                 }
             }
             if (alignment == "Axiomatic")
             {
-                if (evt.Target.Blueprint.Alignment == Alignment.ChaoticGood
-                || evt.Target.Blueprint.Alignment == Alignment.LawfulGood
-                || evt.Target.Blueprint.Alignment == Alignment.NeutralGood)
+                if (evt.Target.Blueprint.Alignment != Alignment.ChaoticGood
+                || evt.Target.Blueprint.Alignment != Alignment.ChaoticNeutral
+                || evt.Target.Blueprint.Alignment != Alignment.ChaoticEvil)
                 {
                     { return; }
                 }

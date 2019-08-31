@@ -10,25 +10,22 @@ using Kingmaker.Blueprints.Items.Weapons;
 using Kingmaker.Designers.Mechanics.Facts;
 using Kingmaker.EntitySystem.Stats;
 using Kingmaker.Enums;
-using Kingmaker.UI.Log;
-using Kingmaker.Blueprints.Root.Strings.GameLog;
+using Kingmaker.PubSubSystem;
 using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
-using Kingmaker.PubSubSystem;
-using Kingmaker.Blueprints.Items.Ecnchantments;
-using Kingmaker.Enums.Damage;
-
-using Kingmaker.UnitLogic;
+using Kingmaker.UI.AbilityTarget;
 using System;
+using Kingmaker.UnitLogic.Abilities;
+using Kingmaker.Utility;
+using Kingmaker.Enums.Damage;
+using Kingmaker.UnitLogic;
 using System.Collections.Generic;
 using Kingmaker.RuleSystem.Rules.Damage;
 using Kingmaker.UnitLogic.ActivatableAbilities;
-using Kingmaker.UnitLogic.Abilities.Blueprints;
-using Kingmaker.UnitLogic.Buffs.Blueprints;
-using Kingmaker.UnitLogic.Alignments;
-using Kingmaker.UnitLogic.Mechanics.Components;
 using static Kingmaker.UnitLogic.ActivatableAbilities.ActivatableAbilityResourceLogic;
 using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
+using UnityEngine;
+
 
 namespace CallOfTheWild
 {
@@ -90,8 +87,10 @@ namespace CallOfTheWild
                 StatType.SkillPerception
             };
 
+
             // Used ranger stats as they seem to fit the theme pretty well
             var ranger = library.Get<BlueprintCharacterClass>("cda0615668a6df14eb36ba19ee881af6");
+            var wizard = Helpers.GetClass("ba34257984f4c41408ce1dc2004e342e");
             arcanearcher.StartingGold = ranger.StartingGold;
             arcanearcher.PrimaryColor = ranger.PrimaryColor;
             arcanearcher.SecondaryColor = ranger.SecondaryColor;
@@ -99,9 +98,9 @@ namespace CallOfTheWild
             arcanearcher.RecommendedAttributes = new StatType[] { StatType.Dexterity };
             arcanearcher.NotRecommendedAttributes = Array.Empty<StatType>();
 
-            arcanearcher.EquipmentEntities = ranger.EquipmentEntities;
-            arcanearcher.MaleEquipmentEntities = ranger.MaleEquipmentEntities;
-            arcanearcher.FemaleEquipmentEntities = ranger.FemaleEquipmentEntities;
+            arcanearcher.EquipmentEntities = wizard.EquipmentEntities;
+            arcanearcher.MaleEquipmentEntities = wizard.MaleEquipmentEntities;
+            arcanearcher.FemaleEquipmentEntities = wizard.FemaleEquipmentEntities;
 
             arcanearcher.StartingItems = ranger.StartingItems;
 
@@ -132,7 +131,7 @@ namespace CallOfTheWild
                 Helpers.LevelEntry(1, proficiencies, CreateSpellbookChoice(), CreateEnhanceArrowsMagic(allowed_weapons),
                                    library.Get<BlueprintFeature>("d3e6275cfa6e7a04b9213b7b292a011c"), // ray calculate feature
                                    library.Get<BlueprintFeature>("62ef1cdb90f1d654d996556669caf7fa")),
-                Helpers.LevelEntry(2, library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc")), // Eldritch Archer Ranged Spellstrike //CreateImbueArrow(allowed_weapons)),
+                Helpers.LevelEntry(2, CreateImbueArrow(allowed_weapons)), // Eldritch Archer Ranged Spellstrike //CreateImbueArrow(allowed_weapons)),
                 Helpers.LevelEntry(3, CreateEnhanceArrowsElemental(allowed_weapons)),
                 Helpers.LevelEntry(4),// , CreateSeekerArrow(allowed_weapons)),
                 Helpers.LevelEntry(5, CreateArcheryFeatSelection()), // Distant arrows aren't possible, providing a feat for this level seems reasonable seeing as the class also doesn't get spellcasting here.
@@ -258,6 +257,10 @@ namespace CallOfTheWild
                 Helpers.CreateAddAbilityResource(resource));
 
             // abilityFire.WeightInGroup = group_size;
+            abilityFire.IsOnByDefault = true;
+            abilityFire.DeactivateImmediately = true;
+            abilityFrost.DeactivateImmediately = true;
+            abilityShock.DeactivateImmediately = true;
             abilityFire.Group = enhance_arrows_elemental_group;
             abilityFrost.Group = enhance_arrows_elemental_group;
             abilityShock.Group = enhance_arrows_elemental_group;
@@ -291,7 +294,34 @@ namespace CallOfTheWild
             This ability allows the archer to use the bow’s range rather than the spell’s range. A spell cast in this way uses its 
             standard casting time and the arcane archer can fire the arrow as part of the casting. The arrow must be fired during 
             the round that the casting is completed or the spell is wasted. If the arrow misses, the spell is wasted. */
-            throw new NotImplementedException();
+
+            var buff = Helpers.CreateBuff("ImbueArrowsBuff", "Imbue Arrows", $"Whilst active, you use the range of your bow and make a ranged weapon attack as part of casting area of effect spells", "",
+                        Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<ImbueArrows>(u => { u.weapon_types = allowed_weapons; }));
+            var ability = Helpers.CreateActivatableAbility("ImbueArrowsAbility",
+                                                                    buff.Name,
+                                                                    buff.Description,
+                                                                    "",
+                                                                    buff.Icon,
+                                                                    buff,
+                                                                    AbilityActivationType.Immediately,
+                                                                    CommandType.Free,
+                                                                    null,
+                                                                    Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
+
+
+            var feat = Helpers.CreateFeature("ImbueArrowsFeature", "Imbue Arrows",
+                $"At 2nd level, an arcane archer gains the ability to place an area spell upon an arrow. When the arrow is fired, " +
+            "the spell’s area is centered where the arrow lands, even if the spell could normally be centered only on the caster. " +
+            "This ability allows the archer to use the bow’s range rather than the spell’s range. A spell cast in this way uses its " +
+            "standard casting time and the arcane archer can fire the arrow as part of the casting. The arrow must be fired during " +
+            "the round that the casting is completed or the spell is wasted. If the arrow misses, the spell is wasted.",
+                "",
+                Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+                FeatureGroup.None,
+                Helpers.CreateAddFact(ability));
+
+
+            return feat;
         }
         static BlueprintFeature CreateSeekerArrow(BlueprintWeaponType[] allowed_weapons)
         {
@@ -440,9 +470,6 @@ namespace CallOfTheWild
 
         public void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
         {
-
-            var bonus_damage = Helpers.CreateActionDealDamage(DamageEnergyType.Fire, Helpers.CreateContextDiceValue(DiceType.D6, Helpers.CreateContextValue(AbilityRankType.DamageBonus)));
-            var bonus_damage_action = Helpers.CreateActionList(bonus_damage);
             if (!Array.Exists(weapon_types, t => t == evt.Weapon.Blueprint.Type))
             {
                 return;
@@ -462,12 +489,69 @@ namespace CallOfTheWild
                 },
                 Dice = new DiceFormula(1, DiceType.D6)
             };
+
             evt.DamageDescription.Add(damageDescription);
         }
 
         public void OnEventDidTrigger(RuleCalculateWeaponStats evt) { }
 
     }
+
+
+
+    public class ImbueArrows : OwnedGameLogicComponent<UnitDescriptor>, IAbilityTargetSelectionUIHandler, IGlobalSubscriber
+
+    {
+        public BlueprintWeaponType[] weapon_types;
+        Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange range = Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Custom;
+
+        Feet oldCustomRange = new Kingmaker.Utility.Feet(0);
+        Feet newCustomRange = new Kingmaker.Utility.Feet(0);
+
+        public static ImbueArrows Instance { get; private set; }
+        public void Initialize()
+        {
+            this.CursorTarget.SetActive(false);
+            EventBus.Subscribe(this);
+            ImbueArrows.Instance = this;
+        }
+        public void HandleAbilityTargetSelectionStart(AbilityData evt)
+        {
+            if (evt.Blueprint.IsSpell)
+            {
+                var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
+                var spellrange = evt.Blueprint.Range;
+                oldCustomRange = evt.Blueprint.CustomRange;
+                if (evt.Blueprint.HasAreaEffect())
+                {
+                    range = evt.Blueprint.Range;
+                    evt.Blueprint.Range = Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Weapon;
+                    evt.Blueprint.CustomRange = weapon.Blueprint.AttackRange;
+                    newCustomRange = evt.Blueprint.CustomRange;
+                }
+                EventBus.Subscribe(this);
+            }
+        }
+        public void HandleAbilityTargetSelectionEnd(AbilityData evt)
+        {
+            if (evt.Blueprint.IsSpell)
+            {
+                if (range != Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Custom)
+                {
+                    evt.Blueprint.Range = range;
+                    range = Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Custom;
+                }
+                if (oldCustomRange != newCustomRange)
+                {
+                    evt.Blueprint.CustomRange = oldCustomRange;
+                }
+            }
+
+        }
+
+        public GameObject CursorTarget;
+    }
+
 
 }
 

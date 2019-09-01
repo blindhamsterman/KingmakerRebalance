@@ -25,6 +25,8 @@ using Kingmaker.UnitLogic.ActivatableAbilities;
 using static Kingmaker.UnitLogic.ActivatableAbilities.ActivatableAbilityResourceLogic;
 using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
 using UnityEngine;
+using Kingmaker.UnitLogic.Alignments;
+using Kingmaker.UnitLogic.Abilities.Components.CasterCheckers;
 
 
 namespace CallOfTheWild
@@ -292,19 +294,23 @@ namespace CallOfTheWild
             var abilityHoly = Helpers.CreateAbility("EnhanceArrowsHolyAbility",
                             holyArrowBuff.Name,
                             holyArrowBuff.Description, "", holyArrowBuff.Icon, AbilityType.Special, CommandType.Free,
-                            AbilityRange.Weapon, "Permanent", "N/A", actionHoly, Helpers.CreateResourceLogic(resource));
+                            AbilityRange.Weapon, "Permanent", "N/A", actionHoly, Helpers.CreateResourceLogic(resource),
+                            Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Evil));
             var abilityUnoly = Helpers.CreateAbility("EnhanceArrowsUnholyAbility",
                             unholyArrowBuff.Name,
                             unholyArrowBuff.Description, "", unholyArrowBuff.Icon, AbilityType.Special, CommandType.Free,
-                            AbilityRange.Weapon, "Permanent", "N/A", actionUnholy, Helpers.CreateResourceLogic(resource));
+                            AbilityRange.Weapon, "Permanent", "N/A", actionUnholy, Helpers.CreateResourceLogic(resource),
+                            Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Good));
             var abilityAnarchic = Helpers.CreateAbility("EnhanceArrowsAnarchicAbility",
                             anarchicArrowBuff.Name,
                             anarchicArrowBuff.Description, "", anarchicArrowBuff.Icon, AbilityType.Special, CommandType.Free,
-                            AbilityRange.Weapon, "Permanent", "N/A", actionAnarchic, Helpers.CreateResourceLogic(resource));
+                            AbilityRange.Weapon, "Permanent", "N/A", actionAnarchic, Helpers.CreateResourceLogic(resource),
+                            Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Lawful));
             var abilityAxiomatic = Helpers.CreateAbility("EnhanceArrowsAxiomaticAbility",
                             axiomaticArrowBuff.Name,
                             axiomaticArrowBuff.Description, "", axiomaticArrowBuff.Icon, AbilityType.Special, CommandType.Free,
-                            AbilityRange.Weapon, "Permanent", "N/A", actionAxiomatic, Helpers.CreateResourceLogic(resource));
+                            AbilityRange.Weapon, "Permanent", "N/A", actionAxiomatic, Helpers.CreateResourceLogic(resource),
+                            Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Chaotic));
 
             //feature
             var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsAligned", "Enhance Arrows (Aligned)",

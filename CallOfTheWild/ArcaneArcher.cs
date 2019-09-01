@@ -223,13 +223,13 @@ namespace CallOfTheWild
                             Common.createContextActionRemoveBuff(fireArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
 
             var abilityFire = Helpers.CreateAbility("EnhanceArrowsFireAbility",
-                                fireArrowBuff.Name, fireArrowBuff.Description, "", fireArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                                fireArrowBuff.Name, fireArrowBuff.Description, "", fireArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                                 AbilityRange.Weapon, "Permanent", "N/A", actionFire, Helpers.CreateResourceLogic(resource));
             var abilityFrost = Helpers.CreateAbility("EnhanceArrowsFrostAbility",
-                                frostArrowBuff.Name, frostArrowBuff.Description, "", frostArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                                frostArrowBuff.Name, frostArrowBuff.Description, "", frostArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                                 AbilityRange.Weapon, "Permanent", "N/A", actionFrost, Helpers.CreateResourceLogic(resource));
             var abilityShock = Helpers.CreateAbility("EnhanceArrowsShockAbility",
-                                shockArrowBuff.Name, shockArrowBuff.Description, "", shockArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                                shockArrowBuff.Name, shockArrowBuff.Description, "", shockArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                                 AbilityRange.Weapon, "Permanent", "N/A", actionShock, Helpers.CreateResourceLogic(resource));
 
             var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
@@ -293,22 +293,22 @@ namespace CallOfTheWild
             //abilities
             var abilityHoly = Helpers.CreateAbility("EnhanceArrowsHolyAbility",
                             holyArrowBuff.Name,
-                            holyArrowBuff.Description, "", holyArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            holyArrowBuff.Description, "", holyArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                             AbilityRange.Weapon, "Permanent", "N/A", actionHoly, Helpers.CreateResourceLogic(resource),
                             Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Evil));
             var abilityUnoly = Helpers.CreateAbility("EnhanceArrowsUnholyAbility",
                             unholyArrowBuff.Name,
-                            unholyArrowBuff.Description, "", unholyArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            unholyArrowBuff.Description, "", unholyArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                             AbilityRange.Weapon, "Permanent", "N/A", actionUnholy, Helpers.CreateResourceLogic(resource),
                             Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Good));
             var abilityAnarchic = Helpers.CreateAbility("EnhanceArrowsAnarchicAbility",
                             anarchicArrowBuff.Name,
-                            anarchicArrowBuff.Description, "", anarchicArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            anarchicArrowBuff.Description, "", anarchicArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                             AbilityRange.Weapon, "Permanent", "N/A", actionAnarchic, Helpers.CreateResourceLogic(resource),
                             Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Lawful));
             var abilityAxiomatic = Helpers.CreateAbility("EnhanceArrowsAxiomaticAbility",
                             axiomaticArrowBuff.Name,
-                            axiomaticArrowBuff.Description, "", axiomaticArrowBuff.Icon, AbilityType.Special, CommandType.Free,
+                            axiomaticArrowBuff.Description, "", axiomaticArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                             AbilityRange.Weapon, "Permanent", "N/A", actionAxiomatic, Helpers.CreateResourceLogic(resource),
                             Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Chaotic));
 

@@ -213,24 +213,24 @@ namespace CallOfTheWild
                 Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
 
             var actionFire = Helpers.CreateRunActions(Common.createContextActionApplyBuff(fireArrowBuff,
-                            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
-                            Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
+                Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+                Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
             var actionFrost = Helpers.CreateRunActions(Common.createContextActionApplyBuff(frostArrowBuff,
-                            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
-                            Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(fireArrowBuff));
+                Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+                Common.createContextActionRemoveBuff(shockArrowBuff), Common.createContextActionRemoveBuff(fireArrowBuff));
             var actionShock = Helpers.CreateRunActions(Common.createContextActionApplyBuff(shockArrowBuff,
-                            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
-                            Common.createContextActionRemoveBuff(fireArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
+                Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+                Common.createContextActionRemoveBuff(fireArrowBuff), Common.createContextActionRemoveBuff(frostArrowBuff));
 
             var abilityFire = Helpers.CreateAbility("EnhanceArrowsFireAbility",
-                                fireArrowBuff.Name, fireArrowBuff.Description, "", fireArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
-                                AbilityRange.Weapon, "Permanent", "N/A", actionFire, Helpers.CreateResourceLogic(resource));
+                fireArrowBuff.Name, fireArrowBuff.Description, "", fireArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
+                AbilityRange.Weapon, "Permanent", "N/A", actionFire, Helpers.CreateResourceLogic(resource));
             var abilityFrost = Helpers.CreateAbility("EnhanceArrowsFrostAbility",
-                                frostArrowBuff.Name, frostArrowBuff.Description, "", frostArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
-                                AbilityRange.Weapon, "Permanent", "N/A", actionFrost, Helpers.CreateResourceLogic(resource));
+                frostArrowBuff.Name, frostArrowBuff.Description, "", frostArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
+                AbilityRange.Weapon, "Permanent", "N/A", actionFrost, Helpers.CreateResourceLogic(resource));
             var abilityShock = Helpers.CreateAbility("EnhanceArrowsShockAbility",
-                                shockArrowBuff.Name, shockArrowBuff.Description, "", shockArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
-                                AbilityRange.Weapon, "Permanent", "N/A", actionShock, Helpers.CreateResourceLogic(resource));
+                shockArrowBuff.Name, shockArrowBuff.Description, "", shockArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
+                AbilityRange.Weapon, "Permanent", "N/A", actionShock, Helpers.CreateResourceLogic(resource));
 
             var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
                 $"At 3rd level, In addition, the arcane archer’s arrows gain a number of additional qualities as he gains additional " +
@@ -256,39 +256,39 @@ namespace CallOfTheWild
 
             //buffs
             var holyArrowBuff = Helpers.CreateBuff(name + "Holy" + "Buff", displayName + " (Holy)",
-            $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of evil alignment", "",
-            library.Get<BlueprintActivatableAbility>("ce0ece459ebed9941bb096f559f36fa8").Icon, null,
-            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Holy; }));
+                $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of evil alignment", "",
+                library.Get<BlueprintActivatableAbility>("ce0ece459ebed9941bb096f559f36fa8").Icon, null,
+                Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Holy; }));
             var unholyArrowBuff = Helpers.CreateBuff(name + "Unoly" + "Buff", displayName + " (Unoly)",
-            $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of good alignment", "",
-            library.Get<BlueprintActivatableAbility>("561803a819460f34ea1fe079edabecce").Icon, null,
-            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Unholy; }));
+                $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of good alignment", "",
+                library.Get<BlueprintActivatableAbility>("561803a819460f34ea1fe079edabecce").Icon, null,
+                Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Unholy; }));
             var anarchicArrowBuff = Helpers.CreateBuff(name + "Anarchic" + "Buff", displayName + " (Anarchic)",
-            $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of lawful alignment", "",
-            library.Get<BlueprintActivatableAbility>("8ed07b0cc56223c46953348f849f3309").Icon, null,
-            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Anarchic"; u.damage_type = DamageEnergyType.Unholy; }));
+                $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of lawful alignment", "",
+                library.Get<BlueprintActivatableAbility>("8ed07b0cc56223c46953348f849f3309").Icon, null,
+                Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Anarchic"; u.damage_type = DamageEnergyType.Unholy; }));
             var axiomaticArrowBuff = Helpers.CreateBuff(name + "Axiomic" + "Buff", displayName + " (Axiomic)",
-            $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of chaotic alignment", "",
-            library.Get<BlueprintActivatableAbility>("d76e8a80ab14ac942b6a9b8aaa5860b1").Icon, null,
-            Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Axiomic"; u.damage_type = DamageEnergyType.Holy; }));
+                $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of chaotic alignment", "",
+                library.Get<BlueprintActivatableAbility>("d76e8a80ab14ac942b6a9b8aaa5860b1").Icon, null,
+                Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Axiomic"; u.damage_type = DamageEnergyType.Holy; }));
 
             //actions
             var actionHoly = Helpers.CreateRunActions(Common.createContextActionApplyBuff(holyArrowBuff,
-            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
-            Common.createContextActionRemoveBuff(unholyArrowBuff), Common.createContextActionRemoveBuff(anarchicArrowBuff),
-            Common.createContextActionRemoveBuff(axiomaticArrowBuff));
+                Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+                Common.createContextActionRemoveBuff(unholyArrowBuff), Common.createContextActionRemoveBuff(anarchicArrowBuff),
+                Common.createContextActionRemoveBuff(axiomaticArrowBuff));
             var actionUnholy = Helpers.CreateRunActions(Common.createContextActionApplyBuff(unholyArrowBuff,
-            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
-            Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(anarchicArrowBuff),
-            Common.createContextActionRemoveBuff(axiomaticArrowBuff));
+                Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+                Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(anarchicArrowBuff),
+                Common.createContextActionRemoveBuff(axiomaticArrowBuff));
             var actionAnarchic = Helpers.CreateRunActions(Common.createContextActionApplyBuff(anarchicArrowBuff,
-            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
-            Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(unholyArrowBuff),
-            Common.createContextActionRemoveBuff(axiomaticArrowBuff));
+                Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+                Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(unholyArrowBuff),
+                Common.createContextActionRemoveBuff(axiomaticArrowBuff));
             var actionAxiomatic = Helpers.CreateRunActions(Common.createContextActionApplyBuff(axiomaticArrowBuff,
-            Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
-            Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(unholyArrowBuff),
-            Common.createContextActionRemoveBuff(anarchicArrowBuff));
+                Helpers.CreateContextDuration(Helpers.CreateContextValue(AbilityRankType.StatBonus)), is_permanent: true, dispellable: false),
+                Common.createContextActionRemoveBuff(holyArrowBuff), Common.createContextActionRemoveBuff(unholyArrowBuff),
+                Common.createContextActionRemoveBuff(anarchicArrowBuff));
 
             //abilities
             var abilityHoly = Helpers.CreateAbility("EnhanceArrowsHolyAbility",

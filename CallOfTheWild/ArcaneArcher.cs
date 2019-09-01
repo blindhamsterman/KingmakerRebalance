@@ -416,6 +416,7 @@ namespace CallOfTheWild
             // targetted ability
             // Should apply this fact
             // Kingmaker.Designers.Mechanics.Facts.IgnoreConcealment
+            // look at stunning fist implementation.
             throw new NotImplementedException();
         }
 
@@ -611,6 +612,20 @@ namespace CallOfTheWild
         }
 
         public void OnEventDidTrigger(RuleDealDamage evt) { }
+    }
+
+
+    public class SeekerArrow : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleAttackRoll>
+    {
+
+        public void OnEventAboutToTrigger(RuleAttackRoll evt)
+        {
+            evt.IgnoreConcealment = true;
+        }
+
+        public void OnEventDidTrigger(RuleAttackRoll evt) {
+
+         }
     }
 
 

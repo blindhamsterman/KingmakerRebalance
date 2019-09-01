@@ -27,6 +27,7 @@ using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
 using UnityEngine;
 using Kingmaker.UnitLogic.Alignments;
 using Kingmaker.UnitLogic.Abilities.Components.CasterCheckers;
+using Kingmaker.Blueprints.Items.Ecnchantments;
 
 
 namespace CallOfTheWild
@@ -577,6 +578,8 @@ namespace CallOfTheWild
                 {
                     { return; }
                 }
+                var holy = library.Get<BlueprintWeaponEnchantment>("28a9964d81fedae44bae3ca45710c140");
+                if (weapon.HasEnchantment(holy)) { return; }
             }
             if (alignment == "Unholy")
             {
@@ -586,6 +589,8 @@ namespace CallOfTheWild
                 {
                     { return; }
                 }
+                var unholy = library.Get<BlueprintWeaponEnchantment>("d05753b8df780fc4bb55b318f06af453");
+                if (weapon.HasEnchantment(unholy)) { return; }
             }
             if (alignment == "Anarchic")
             {
@@ -595,6 +600,8 @@ namespace CallOfTheWild
                 {
                     { return; }
                 }
+                var anarchic = library.Get<BlueprintWeaponEnchantment>("57315bc1e1f62a741be0efde688087e9");
+                if (weapon.HasEnchantment(anarchic)) { return; }
             }
             if (alignment == "Axiomatic")
             {
@@ -604,6 +611,8 @@ namespace CallOfTheWild
                 {
                     { return; }
                 }
+                var axiomatic = library.Get<BlueprintWeaponEnchantment>("0ca43051edefcad4b9b2240aa36dc8d4");
+                if (weapon.HasEnchantment(axiomatic)) { return; }
             }
 
             RuleCalculateWeaponStats ruleCalculateWeaponStats = Rulebook.Trigger<RuleCalculateWeaponStats>(new RuleCalculateWeaponStats(evt.Initiator, weapon, null));
@@ -623,9 +632,10 @@ namespace CallOfTheWild
             evt.IgnoreConcealment = true;
         }
 
-        public void OnEventDidTrigger(RuleAttackRoll evt) {
+        public void OnEventDidTrigger(RuleAttackRoll evt)
+        {
 
-         }
+        }
     }
 
 

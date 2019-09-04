@@ -2383,6 +2383,10 @@ namespace CallOfTheWild
                     return;
                 }
 
+                if (evt.DoNotScaleDamage)
+                {
+                    return;
+                }
                 evt.DoNotScaleDamage = true;
                 DiceFormula baseDice = !evt.WeaponDamageDiceOverride.HasValue ? evt.Weapon.Blueprint.BaseDamage : evt.WeaponDamageDiceOverride.Value;
                 var wielder_size = evt.Initiator.Descriptor.State.Size;
@@ -2407,6 +2411,8 @@ namespace CallOfTheWild
 
         public class ContextActionAttack : ContextAction
         {
+            public ActionList action_on_success = null;
+            public ActionList action_on_miss = null;
             public override string GetCaption()
             {
                 return string.Format("Caster attack");
@@ -2432,6 +2438,14 @@ namespace CallOfTheWild
                     attackWithWeapon.Reason = (RuleReason)this.Context;
                     RuleAttackWithWeapon rule = attackWithWeapon;
                     this.Context.TriggerRule<RuleAttackWithWeapon>(rule);
+                    if (rule.AttackRoll.IsHit)
+                    {
+                        action_on_success?.Run();
+                    }
+                    else
+                    {
+                        action_on_miss?.Run();
+                    }
                 }
             }
         }

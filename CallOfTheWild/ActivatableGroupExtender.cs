@@ -19,6 +19,7 @@ namespace CallOfTheWild
             MetaRage,
             PlanarWildshape,
             EnhanceArrowsElemental,
+            HunterTrick,
         }
 
         public static partial class Extensions

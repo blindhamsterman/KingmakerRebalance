@@ -8,7 +8,9 @@ using Kingmaker.Blueprints.Classes.Prerequisites;
 using Kingmaker.Blueprints.Classes.Selection;
 using Kingmaker.Blueprints.Classes.Spells;
 using Kingmaker.Blueprints.Facts;
+using Kingmaker.Designers.Mechanics.Buffs;
 using Kingmaker.Designers.Mechanics.Facts;
+using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem.Stats;
 using Kingmaker.Enums;
 using Kingmaker.Enums.Damage;
@@ -19,6 +21,7 @@ using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.Abilities.Components;
 using Kingmaker.UnitLogic.Abilities.Components.CasterCheckers;
+using Kingmaker.UnitLogic.Abilities.Components.TargetCheckers;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Buffs.Blueprints;
 using Kingmaker.UnitLogic.Commands.Base;
@@ -73,11 +76,29 @@ namespace CallOfTheWild
         static internal BlueprintActivatableAbility frog_focus;
         static internal BlueprintActivatableAbility owl_focus;
         static internal BlueprintActivatableAbility falcon_focus;
+        static internal BlueprintActivatableAbility snake_focus;
 
         static internal BlueprintActivatableAbility crow_focus;
         static internal BlueprintActivatableAbility shark_focus;
         static internal BlueprintActivatableAbility turtle_focus;
         static internal BlueprintActivatableAbility goat_focus;
+        static internal BlueprintActivatableAbility moongoose_focus;
+
+        static internal BlueprintFeature planar_focus;
+        static internal BlueprintActivatableAbility planar_focus_fire;
+        static internal BlueprintActivatableAbility planar_focus_cold;
+        static internal BlueprintActivatableAbility planar_focus_air;
+        static internal BlueprintActivatableAbility planar_focus_earth;
+        static internal BlueprintActivatableAbility planar_focus_water;
+        static internal BlueprintActivatableAbility planar_focus_shadow;
+        static internal BlueprintActivatableAbility planar_focus_chaos;
+        static internal BlueprintActivatableAbility planar_focus_law;
+        static internal BlueprintActivatableAbility planar_focus_good;
+        static internal BlueprintActivatableAbility planar_focus_evil;
+
+
+        static internal BlueprintFeatureSelection trick_selection;
+        static internal BlueprintAbilityResource trick_resource;
 
 
         static internal BlueprintFeature animal_focus_feykiller;
@@ -132,6 +153,7 @@ namespace CallOfTheWild
                                          Common.createPrerequisiteClassSpellLevel(hunter_class, 2));
 
 
+            createPlanarFocus();
             //fix previous saves without 3rd animal companion
             Action<UnitDescriptor> save_game_fix = delegate (UnitDescriptor unit)
             {
@@ -146,6 +168,186 @@ namespace CallOfTheWild
             };
             SaveGameFix.save_game_actions.Add(save_game_fix);
         }
+
+
+
+
+        static void createPlanarFocus()
+        {
+            var inquistor_class = ResourcesLibrary.TryGetBlueprint<Kingmaker.Blueprints.Classes.BlueprintCharacterClass>("f1a70d9e1b0b41e49874e1fa9052a1ce");
+            var sacred_huntsmaster_archetype = ResourcesLibrary.TryGetBlueprint<Kingmaker.Blueprints.Classes.BlueprintArchetype>("46eb929c8b6d7164188eb4d9bcd0a012");
+            BlueprintCharacterClass[] allowed_classes = new BlueprintCharacterClass[2] { inquistor_class, hunter_class };
+
+            var outsider = library.Get<BlueprintFeature>("9054d3988d491d944ac144e27b6bc318");
+
+            var airborne = library.Get<BlueprintFeature>("70cffb448c132fa409e49156d013b175");
+            planar_focus_air = createToggleFocus("PlanarFocusAir",
+                                                 "Planar Focus: Air",
+                                                 "You gain limited levitation ability that gives you immunity to difficult terrain and ground based effects.",
+                                                 "",
+                                                 "",
+                                                 library.Get<BlueprintFeature>("f48c7d56a8a13af4d8e1cc9aae579b01").Icon, //wings
+                                                 airborne.ComponentsArray
+                                               );
+
+            planar_focus_chaos = createToggleFocus("PlanarFocusChaos",
+                                                     "Planar Focus: Chaos",
+                                                     "Your form shifts subtly, making it difficult for others to aim precise attacks against you. You gain a 25% chance to negate extra damage from critical hits and precision damage from attacks made against you (such as from sneak attacks). Only chaotic characters can use this planar focus.",
+                                                     "",
+                                                     "",
+                                                     library.Get<BlueprintAbility>("1eaf1020e82028d4db55e6e464269e00").Icon, //protection from chaos
+                                                     Common.createAddFortification(25)
+                                                   );
+            planar_focus_chaos.AddComponent(Helpers.Create<NewMechanics.ActivatableAbilityAlignmentRestriction>(c => c.Alignment = Kingmaker.UnitLogic.Alignments.AlignmentMaskType.Chaotic));
+
+            var deal_cold_damage = Helpers.CreateActionDealDamage(DamageEnergyType.Cold,
+                                                                  Helpers.CreateContextDiceValue(DiceType.D4, Helpers.CreateContextValue(AbilityRankType.DamageDice))
+                                                                  );
+            planar_focus_cold = createToggleFocus("PlanarFocusCold",
+                                                 "Planar Focus: Cold",
+                                                 "Creatures that attack you with natural attacks or melee weapons take 1d4 points of cold damage for every 4 class levels you possess.",
+                                                 "",
+                                                 "",
+                                                 library.Get<BlueprintAbility>("021d39c8e0eec384ba69140f4875e166").Icon, //protection from cold
+                                                 Common.createAddTargetAttackWithWeaponTrigger(Helpers.CreateActionList(),
+                                                                                               Helpers.CreateActionList(deal_cold_damage)
+                                                                                               ),
+                                                 Helpers.CreateContextRankConfig(ContextRankBaseValueTypeExtender.MasterMaxClassLevelWithArchetype.ToContextRankBaseValueType(),
+                                                                                 ContextRankProgression.DivStep,
+                                                                                 AbilityRankType.DamageDice,
+                                                                                 stepLevel: 4,
+                                                                                 classes: allowed_classes, archetype: sacred_huntsmaster_archetype)
+                                                 );
+
+
+            planar_focus_earth = createToggleFocus("PlanarFocusEarth",
+                                                     "Planar Focus: Earth",
+                                                     "You gain +2 bonus to CMB when performing bull rush maneuver, and a +2 bonus to CMD when defending against it. You also receive +2 enhancement bonus to your natural armor.",
+                                                     "",
+                                                     "",
+                                                     library.Get<BlueprintAbility>("c66e86905f7606c4eaa5c774f0357b2b").Icon, //stone skin
+                                                     Common.createManeuverBonus(Kingmaker.RuleSystem.Rules.CombatManeuver.BullRush, 2),
+                                                     Common.createManeuverDefenseBonus(Kingmaker.RuleSystem.Rules.CombatManeuver.BullRush, 2),
+                                                     Common.createAddGenericStatBonus(2, ModifierDescriptor.NaturalArmorEnhancement, StatType.AC)
+                                                     );
+
+            planar_focus_evil = createToggleFocus("PlanarFocusEvil",
+                                                     "Planar Focus: Evil",
+                                                     "You gain a +1 profane bonus to AC and on saves against attacks made and effects created by good outsiders. This bonus increases to +2 at 10th level. Only evil characters can use this planar focus.",
+                                                     "",
+                                                     "",
+                                                     library.Get<BlueprintAbility>("b56521d58f996cd4299dab3f38d5fe31").Icon, //profane nimbus
+                                                     Common.createContextACBonusAgainstFactOwner(outsider, AlignmentComponent.Good, Helpers.CreateContextValue(AbilityRankType.StatBonus), ModifierDescriptor.Profane),
+                                                     Common.createContextSavingThrowBonusAgainstFact(outsider, AlignmentComponent.Good, Helpers.CreateContextValue(AbilityRankType.StatBonus), ModifierDescriptor.Profane),
+                                                     Helpers.CreateContextRankConfig(ContextRankBaseValueTypeExtender.MasterMaxClassLevelWithArchetype.ToContextRankBaseValueType(),
+                                                                                 ContextRankProgression.OnePlusDivStep,
+                                                                                 AbilityRankType.StatBonus,
+                                                                                 stepLevel: 10,
+                                                                                 max: 2,
+                                                                                 classes: allowed_classes, archetype: sacred_huntsmaster_archetype)
+                                                     );
+            planar_focus_evil.AddComponent(Helpers.Create<NewMechanics.ActivatableAbilityAlignmentRestriction>(c => c.Alignment = Kingmaker.UnitLogic.Alignments.AlignmentMaskType.Evil));
+
+
+            planar_focus_fire = createToggleFocus("PlanarFocusFire",
+                                                 "Planar Focus: Fire",
+                                                 "Your natural attacks and melee weapons deal 1d4 points of fire damage for every 5 class levels you possess.",
+                                                 "",
+                                                 "",
+                                                 library.Get<BlueprintActivatableAbility>("7902941ef70a0dc44bcfc174d6193386").Icon, //weapon bond flaming
+                                                 Common.createAddWeaponEnergyDamageDiceBuff(Helpers.CreateContextDiceValue(DiceType.D4, Helpers.CreateContextValue(AbilityRankType.DamageDice)),
+                                                                                            DamageEnergyType.Fire,
+                                                                                            AttackType.Melee, AttackType.Touch),
+                                                 Helpers.CreateContextRankConfig(ContextRankBaseValueTypeExtender.MasterMaxClassLevelWithArchetype.ToContextRankBaseValueType(),
+                                                                                 ContextRankProgression.DivStep,
+                                                                                 AbilityRankType.DamageDice,
+                                                                                 stepLevel: 5,
+                                                                                 classes: allowed_classes, archetype: sacred_huntsmaster_archetype)
+                                               );
+
+            planar_focus_good = createToggleFocus("PlanarFocusGood",
+                                         "Planar Focus: Good",
+                                         "You gain a +1 sacred bonus to AC and on saves against attacks made or effects created by evil outsiders. This bonus increases to +2 at 10th level. Only good characters can use this planar focus.",
+                                         "",
+                                         "",
+                                         library.Get<BlueprintAbility>("bf74b3b54c21a9344afe9947546e036f").Icon, //sacred nimbus
+                                         Common.createContextACBonusAgainstFactOwner(outsider, AlignmentComponent.Evil, Helpers.CreateContextValue(AbilityRankType.StatBonus), ModifierDescriptor.Sacred),
+                                         Common.createContextSavingThrowBonusAgainstFact(outsider, AlignmentComponent.Evil, Helpers.CreateContextValue(AbilityRankType.StatBonus), ModifierDescriptor.Sacred),
+                                         Helpers.CreateContextRankConfig(ContextRankBaseValueTypeExtender.MasterMaxClassLevelWithArchetype.ToContextRankBaseValueType(),
+                                                                     ContextRankProgression.OnePlusDivStep,
+                                                                     AbilityRankType.StatBonus,
+                                                                     stepLevel: 10,
+                                                                     max: 2,
+                                                                     classes: allowed_classes, archetype: sacred_huntsmaster_archetype)
+                                         );
+            planar_focus_good.AddComponent(Helpers.Create<NewMechanics.ActivatableAbilityAlignmentRestriction>(c => c.Alignment = Kingmaker.UnitLogic.Alignments.AlignmentMaskType.Good));
+
+            planar_focus_law = createToggleFocus("PlanarFocusLaw",
+                                                 "Planar Focus: Law",
+                                                 "You gain immunity to polymorph spells.",
+                                                 "",
+                                                 "",
+                                                 library.Get<BlueprintAbility>("c3aafbbb6e8fc754fb8c82ede3280051").Icon, //protection from law
+                                                 Common.createSpellImmunityToSpellDescriptor(SpellDescriptor.Polymorph)
+                                                 );
+            planar_focus_law.AddComponent(Helpers.Create<NewMechanics.ActivatableAbilityAlignmentRestriction>(c => c.Alignment = Kingmaker.UnitLogic.Alignments.AlignmentMaskType.Lawful));
+
+            planar_focus_water = createToggleFocus("PlanarFocusWater",
+                                                     "Planar Focus: Water",
+                                                     "You gain immunity to combat maneuvers.",
+                                                     "",
+                                                     "",
+                                                     library.Get<BlueprintAbility>("3e4ab69ada402d145a5e0ad3ad4b8564").Icon, //mirror image
+                                                     Helpers.Create<AddCondition>(c => c.Condition = UnitCondition.ImmuneToCombatManeuvers)
+                                                     );
+
+
+            planar_focus_shadow = createToggleFocus("PlanarFocusShadow",
+                         "Planar Focus: Shadow",
+                         "You gain a +5 bonus on Stealth and Trickery checks.",
+                         "",
+                         "",
+                         library.Get<BlueprintAbility>("f001c73999fb5a543a199f890108d936").Icon, //vanish
+                         Helpers.CreateAddStatBonus(StatType.SkillStealth, 5, ModifierDescriptor.UntypedStackable),
+                         Helpers.CreateAddStatBonus(StatType.SkillThievery, 5, ModifierDescriptor.UntypedStackable)
+                         );
+
+
+            BlueprintActivatableAbility[] foci = new BlueprintActivatableAbility[] {planar_focus_air, planar_focus_chaos, planar_focus_cold, planar_focus_earth,
+                                                                                    planar_focus_evil, planar_focus_fire, planar_focus_good, planar_focus_law, planar_focus_shadow};
+
+            string description = "When you use your animal focus class feature, you can choose any of the following new aspects unless they conflict with your alignment.";
+
+            foreach (var f in foci)
+            {
+                description += "\n" + f.Name + " - " + f.Description;
+            }
+
+            var planar_focus_ac = Helpers.CreateFeature("PlanarFocusAcFeature",
+                                      "",
+                                      "",
+                                      "",
+                                      null,
+                                      FeatureGroup.None,
+                                      Helpers.CreateAddFacts(foci)
+                                      );
+
+            planar_focus = Helpers.CreateFeature("PlanarFocusFeature",
+                                                 "Planar Focus",
+                                                  description,
+                                                  "",
+                                                  null,
+                                                  FeatureGroup.Feat,
+                                                  Helpers.CreateAddFacts(foci),
+                                                  Helpers.PrerequisiteStatValue(StatType.SkillLoreReligion, 5),
+                                                  Helpers.PrerequisiteClassLevel(hunter_class, 1, true),
+                                                  Common.createPrerequisiteArchetypeLevel(inquistor_class, sacred_huntsmaster_archetype, 4, true)
+                                                  );
+            planar_focus.AddComponent(createAddFeatToAnimalCompanion(planar_focus));
+
+            library.AddFeats(planar_focus);
+        }
+
 
         static void createFeykillerArchetype()
         {
@@ -194,15 +396,19 @@ namespace CallOfTheWild
             Helpers.SetField(feykiller_archetype, "m_ParentClass", hunter_class);
             library.AddAsset(feykiller_archetype, "4165bde18ad94688b1eab678ccda5f17");
             feykiller_archetype.RemoveFeatures = new LevelEntry[] {Helpers.LevelEntry(1, animal_focus, animal_focus_ac),
+                                                                  Helpers.LevelEntry(7, trick_selection),
                                                                   Helpers.LevelEntry(8, animal_focus_additional_use, animal_focus_additional_use_ac),
+                                                                  Helpers.LevelEntry(13, trick_selection),
+                                                                  Helpers.LevelEntry(19, trick_selection),
                                                                   Helpers.LevelEntry(20, animal_focus_additional_use2, animal_focus_additional_use_ac2) };
 
             feykiller_archetype.AddFeatures = new LevelEntry[] {Helpers.LevelEntry(1, animal_focus_feykiller, animal_focus_feykiller_ac),
                                                                 Helpers.LevelEntry(4, resist_nature_lure),
                                                                 Helpers.LevelEntry(7, iron_talons_ac),
-                                                                Helpers.LevelEntry(14, animal_focus_additional_use, animal_focus_additional_use_ac),
+                                                                Helpers.LevelEntry(8, animal_focus_additional_use, animal_focus_additional_use_ac),
                                                                 Helpers.LevelEntry(17, grounded),
-                                                             };
+                                                                Helpers.LevelEntry(20, animal_focus_additional_use2, animal_focus_additional_use_ac2),
+                                                              };
 
             hunter_progression.UIGroups[1].Features.Add(animal_focus_feykiller);
             hunter_progression.UIGroups[2].Features.Add(animal_focus_feykiller_ac);
@@ -222,6 +428,7 @@ namespace CallOfTheWild
             var devil_spawn = ResourcesLibrary.TryGetBlueprint<Kingmaker.Blueprints.Classes.BlueprintFeature>("02a2c984494a9734ba8b01927dcf96e2"); // goat
             var magic_fang = ResourcesLibrary.TryGetBlueprint<Kingmaker.UnitLogic.Abilities.Blueprints.BlueprintAbility>("403cf599412299a4f9d5d925c7b9fb33"); //shark
             var resistance = ResourcesLibrary.TryGetBlueprint<Kingmaker.UnitLogic.Abilities.Blueprints.BlueprintAbility>("7bc8e27cba24f0e43ae64ed201ad5785"); //turtle
+            var delay_poison = library.Get<BlueprintAbility>("b48b4c5ffb4eab0469feba27fc86a023"); //moongoose
 
             (int, int)[] progressionStat = new (int, int)[3] { (7, 2), (14, 4), (20, 6) };
             (int, int)[] progressionSkill = new (int, int)[3] { (7, 4), (14, 6), (20, 8) };
@@ -280,6 +487,21 @@ namespace CallOfTheWild
                                                allowed_classes,
                                                sacred_huntsmaster_archetype);
 
+            moongoose_focus = createToggleFocus("MoongooseFocus",
+                                               "Animal Focus: Moongoose",
+                                               "The creature gains a +2 competence bonus on grapple combat maneuver CMD and on saving throws against poison. These bonuses increase to +4 at 8th level and +6 at 15th level.",
+                                               "d701e4b4e972480cbc19f95a1dfdfd95",
+                                               "fae5d97c0a914b6fb732ef6d9bd6ce2a",
+                                               delay_poison.Icon,
+                                               Common.createContextManeuverDefenseBonus(Kingmaker.RuleSystem.Rules.CombatManeuver.Grapple, Helpers.CreateContextValue(AbilityRankType.StatBonus)),
+                                               Common.createContextSavingThrowBonusAgainstDescriptor(Helpers.CreateContextValue(AbilityRankType.StatBonus), ModifierDescriptor.Circumstance, SpellDescriptor.Poison),
+                                               Helpers.CreateContextRankConfig(ContextRankBaseValueTypeExtender.MasterMaxClassLevelWithArchetype.ToContextRankBaseValueType(),
+                                                                                 ContextRankProgression.Custom,
+                                                                                 AbilityRankType.StatBonus,
+                                                                                 customProgression: progressionStat,
+                                                                                 classes: allowed_classes, archetype: sacred_huntsmaster_archetype)
+                                               );
+
 
             BlueprintComponent animal_foci = CallOfTheWild.Helpers.CreateAddFacts(bull_focus,
                                                                                        tiger_focus,
@@ -289,7 +511,8 @@ namespace CallOfTheWild
                                                                                        turtle_focus,
                                                                                        crow_focus,
                                                                                        shark_focus,
-                                                                                       goat_focus);
+                                                                                       goat_focus,
+                                                                                       moongoose_focus);
 
 
 
@@ -336,7 +559,10 @@ namespace CallOfTheWild
             forester_archetype.RemoveFeatures = new LevelEntry[] {Helpers.LevelEntry(1, hunter_animal_companion, animal_focus_ac),
                                                                   Helpers.LevelEntry(2, precise_companion),
                                                                   Helpers.LevelEntry(3, hunter_tactics),
+                                                                  Helpers.LevelEntry(7, trick_selection),
                                                                   Helpers.LevelEntry(8, animal_focus_additional_use_ac),
+                                                                  Helpers.LevelEntry(13, trick_selection),
+                                                                  Helpers.LevelEntry(19, trick_selection),
                                                                   Helpers.LevelEntry(20, animal_focus_additional_use_ac2) };
 
             var evasion = library.Get<BlueprintFeature>("576933720c440aa4d8d42b0c54b77e80");
@@ -347,44 +573,20 @@ namespace CallOfTheWild
             camouflage.SetComponents(Helpers.CreateAddFact(camouflage_ability));
             camouflage.SetDescription(camouflage_ability.Description);
 
-            string[] favored_terrain_guids = new string[] {"93f9cf990bfd477795faa8cd97f29e2c",
-                                                             "13cfc8f8121841ebb29d2f78802c7c7f",
-                                                             "bcda940651334b5fa236e1888e7b7a83",
-                                                             "b8c14546f4714df5b519f268f9b2af78",
-                                                             "aba4c11a52994c6791e38987c4cb1ba2",
-                                                             "42ce5c5ff8084aed8230aac14176f483"};
-
             var forester_favored_terrain_selection = Common.copyRenameSelection("a6ea422d7308c0d428a541562faedefd",
                                                                                  "Forester",
-                                                                                 "A forester gains the ranger’s favored terrain ability. She gains her first favored terrain at 5th level and a new favored terrain every 4 levels thereafter. The forester gains a +2 bonus on initiative checks and Lore (Nature), Perception, and Stealth skill checks when he is in this terrain.",
-                                                                                 "e36b551be4684d4388242b405f7a8732",
-                                                                                 favored_terrain_guids);
+                                                                                 "A forester gains the ranger’s favored terrain ability. She gains her first favored terrain at 5th level and a new favored terrain every 4 levels thereafter. The forester gains a +2 bonus on initiative checks and Lore (Nature), Perception, and Stealth skill checks when he is in this terrain. In addition, at each such interval, the bonuses on initiative checks and skill checks in one favored terrain (including the one just selected, if so desired) increase by 2.",
+                                                                                 "e36b551be4684d4388242b405f7a8732");
 
-            string[] favored_enemy_guids = new string [] {"bbc2b888cecc4f2284acd3845454da29",
-                                                    "989b7921d44840398b84887332ca2ed7",
-                                                    "0e39b46b534a41f5acaf7412a7a98237",
-                                                    "5ed706f7917445a2af929eb286cee6f2",
-                                                    "2a4b4f52b2994732beb411ce6710bb12",
-                                                    "6deec72a74f843dba739e4508751d38a",
-                                                    "ce653d0e0eda4e1fa90f9d1fa8a835aa",
-                                                    "89028eb6b2fa4c5ab873c274fa8f0b3c",
-                                                    "827b313a7045419ab4cfd89cbc8bc2d6",
-                                                    "63fbe72a756f46f1896b85376083d19c",
-                                                    "dce6fc719e294721869bd9ef6bdaa2ed",
-                                                    "5f6324d30da44baaa5d7c9ac81f1de31",
-                                                    "3577b87a9ef94ba18cdee30bbdf755fd",
-                                                    "77b6be6ec8574857b9b2d58d20ea4598",
-                                                    "c4fdc727551345839ba5afa995139030",
-                                                    "8ae497a29de7470aad548b4af509fb42",
-                                                    "9fcffdbf9ef74337b7868e8eedde7cea",
-                                                    "550501c634e441b2b7eba42a6c866cb7",
-                                                    "4abb7ef0ba8a443990f0e75f6ad652d9"
-                                                    };
+            var forester_improved_favored_terrain_selection = library.CopyAndAdd<BlueprintFeatureSelection>(forester_favored_terrain_selection.AssetGuid, "ImprovedForesterFavoredTerrainSelection", "");
+            forester_improved_favored_terrain_selection.Mode = SelectionMode.OnlyRankUp;
+            forester_improved_favored_terrain_selection.SetName("Improved Favored Terrain");
+
+
             var forester_favored_enemy_selection = Common.copyRenameSelection("16cc2c937ea8d714193017780e7d4fc6",
                                                                      "Forester",
                                                                      "At 6th level, a forester selects a creature type from the ranger favored enemies list. He gets a + 2 bonus on weapon attack and damage rolls against them.\nAt 10th level and every four levels thereafter( 14th, and 18th level), the ranger may select an additional favored enemy.\nIf the forester chooses humanoids or outsiders as a favored enemy, he must also choose an associated subtype, as indicated on the table below. If a specific creature falls into more than one category of favored enemy, the forester's bonuses do not stack; he simply uses whichever bonus is higher.",
-                                                                     "c8fec1d3bf354c06bc9a3d356453767f",
-                                                                     favored_enemy_guids);
+                                                                     "c8fec1d3bf354c06bc9a3d356453767f");
 
             var bonus_feat_selection = library.CopyAndAdd<Kingmaker.Blueprints.Classes.Selection.BlueprintFeatureSelection>("41c8486641f7d6d4283ca9dae4147a9f", "ForesterBonusFeatSelection", "eaa6fe284ea8461493ad95e406b74e41");
             bonus_feat_selection.SetDescription("At 2nd level, a forester gains one bonus combat feat. She must meet the prerequisites for this feat as normal. She gains an additional bonus combat feat at 7th, 13th, and 19th levels.");
@@ -397,12 +599,12 @@ namespace CallOfTheWild
                                                                 Helpers.LevelEntry(5, forester_favored_terrain_selection),
                                                                 Helpers.LevelEntry(6, forester_favored_enemy_selection),
                                                                 Helpers.LevelEntry(7, camouflage, bonus_feat_selection),
-                                                                Helpers.LevelEntry(9, forester_favored_terrain_selection),
+                                                                Helpers.LevelEntry(9, forester_favored_terrain_selection, forester_improved_favored_terrain_selection),
                                                                 Helpers.LevelEntry(10, forester_favored_enemy_selection),
                                                                 Helpers.LevelEntry(11, improved_evasion),
-                                                                Helpers.LevelEntry(13, forester_favored_terrain_selection, bonus_feat_selection),
+                                                                Helpers.LevelEntry(13, forester_favored_terrain_selection, bonus_feat_selection, forester_improved_favored_terrain_selection),
                                                                 Helpers.LevelEntry(14, forester_favored_enemy_selection),
-                                                                Helpers.LevelEntry(17, forester_favored_terrain_selection),
+                                                                Helpers.LevelEntry(17, forester_favored_terrain_selection, forester_improved_favored_terrain_selection),
                                                                 Helpers.LevelEntry(18, forester_favored_enemy_selection),
                                                                 Helpers.LevelEntry(19, bonus_feat_selection)
                                                              };
@@ -410,6 +612,7 @@ namespace CallOfTheWild
 
            hunter_progression.UIGroups = hunter_progression.UIGroups.AddToArray(Helpers.CreateUIGroups(bonus_feat_selection, bonus_feat_selection, bonus_feat_selection, bonus_feat_selection));
            hunter_progression.UIGroups = hunter_progression.UIGroups.AddToArray(Helpers.CreateUIGroups(forester_favored_terrain_selection, forester_favored_terrain_selection, forester_favored_terrain_selection, forester_favored_terrain_selection));
+           hunter_progression.UIGroups = hunter_progression.UIGroups.AddToArray(Helpers.CreateUIGroups(forester_improved_favored_terrain_selection, forester_improved_favored_terrain_selection, forester_improved_favored_terrain_selection, forester_improved_favored_terrain_selection));
            hunter_progression.UIGroups = hunter_progression.UIGroups.AddToArray(Helpers.CreateUIGroups(forester_tactician, evasion, camouflage, improved_evasion));
         }
 
@@ -765,8 +968,8 @@ namespace CallOfTheWild
             hunter_woodland_stride = library.CopyAndAdd<BlueprintFeature>("11f4072ea766a5840a46e6660894527d",
                                                                          "HunterWooldlandStride",
                                                                          "07f67ae4a1614ca6b0d09df6a317630c");
-            hunter_woodland_stride.SetDescription("At 5th level, you can move through any sort difficult terrain at your normal speed and without taking damage or suffering any other impairment.");
-
+            hunter_woodland_stride.SetDescription("At 5th level, you and your animal companion can move through any sort difficult terrain at your normal speed and without taking damage or suffering any other impairment.");
+            hunter_woodland_stride.AddComponent(createAddFeatToAnimalCompanion(hunter_woodland_stride));
             var entries = new List<LevelEntry>();
             entries.Add(Helpers.LevelEntry(1, hunter_proficiencies, hunter_orisons, detect_magic, bonus_hunter_spells, hunter_animal_companion, animal_focus, animal_focus_ac,
                                                            library.Get<BlueprintFeature>("d3e6275cfa6e7a04b9213b7b292a011c"), // ray calculate feature
@@ -774,33 +977,185 @@ namespace CallOfTheWild
                                                            )) ;
 
             createPreciseCompanion();
+            createTrickSelection();
             entries.Add(Helpers.LevelEntry(2, precise_companion));
             entries.Add(Helpers.LevelEntry(3, hunter_tactics, hunter_teamwork_feat));
             entries.Add(Helpers.LevelEntry(4));
             entries.Add(Helpers.LevelEntry(5, hunter_woodland_stride));
             entries.Add(Helpers.LevelEntry(6, hunter_teamwork_feat));
-            entries.Add(Helpers.LevelEntry(7));
+            entries.Add(Helpers.LevelEntry(7, trick_selection));
             entries.Add(Helpers.LevelEntry(8, animal_focus_additional_use, animal_focus_additional_use_ac));
             entries.Add(Helpers.LevelEntry(9, hunter_teamwork_feat));
             entries.Add(Helpers.LevelEntry(10));
             entries.Add(Helpers.LevelEntry(11));
             entries.Add(Helpers.LevelEntry(12, hunter_teamwork_feat));
-            entries.Add(Helpers.LevelEntry(13));
+            entries.Add(Helpers.LevelEntry(13, trick_selection));
             entries.Add(Helpers.LevelEntry(14));
             entries.Add(Helpers.LevelEntry(15, hunter_teamwork_feat));
             entries.Add(Helpers.LevelEntry(16));
             entries.Add(Helpers.LevelEntry(17));
             entries.Add(Helpers.LevelEntry(18, hunter_teamwork_feat));
-            entries.Add(Helpers.LevelEntry(19));
+            entries.Add(Helpers.LevelEntry(19, trick_selection));
             entries.Add(Helpers.LevelEntry(20, animal_focus_additional_use2, animal_focus_additional_use_ac2));
-            hunter_progression.UIGroups = new UIGroup[4] { Helpers.CreateUIGroups(precise_companion, hunter_teamwork_feat, hunter_teamwork_feat, hunter_teamwork_feat, 
-                                                                                    hunter_teamwork_feat, hunter_teamwork_feat, hunter_teamwork_feat)[0],
-                                                          Helpers.CreateUIGroups(animal_focus, animal_focus_additional_use, animal_focus_additional_use2)[0],
-                                                          Helpers.CreateUIGroups(animal_focus_ac, animal_focus_additional_use_ac, animal_focus_additional_use_ac2)[0],
-                                                          Helpers.CreateUIGroups(bonus_hunter_spells, hunter_tactics, hunter_woodland_stride)[0] };
+            hunter_progression.UIGroups = new UIGroup[] { Helpers.CreateUIGroup(precise_companion, hunter_teamwork_feat, hunter_teamwork_feat, hunter_teamwork_feat, 
+                                                                                    hunter_teamwork_feat, hunter_teamwork_feat, hunter_teamwork_feat),
+                                                          Helpers.CreateUIGroup(animal_focus, animal_focus_additional_use, animal_focus_additional_use2),
+                                                          Helpers.CreateUIGroup(animal_focus_ac, animal_focus_additional_use_ac, animal_focus_additional_use_ac2),
+                                                          Helpers.CreateUIGroup(bonus_hunter_spells, hunter_tactics, hunter_woodland_stride),
+                                                          Helpers.CreateUIGroup(trick_selection, trick_selection, trick_selection)};
             hunter_progression.UIDeterminatorsGroup = new BlueprintFeatureBase[] { hunter_animal_companion, hunter_proficiencies, hunter_orisons, detect_magic};
             hunter_progression.LevelEntries = entries.ToArray();
 
+        }
+
+
+        static void createTrickSelection()
+        {
+            //aiding attack: + 2 bonus on next attack roll
+            //distracting attack: -2 on attack rolls for 1 round
+            //rattling strike: target is shaken fo 1d4 rounds
+            //tangling attack: target entangled for 1 round
+            //Upending Strike: trip combat maneuver
+            var animal_class = ResourcesLibrary.TryGetBlueprint<Kingmaker.Blueprints.Classes.BlueprintCharacterClass>("4cd1757a0eea7694ba5c933729a53920");
+            trick_resource = Helpers.CreateAbilityResource("TrickResource", "", "", "", null);
+            trick_resource.SetIncreasedByLevelStartPlusDivStep(0, 0, 0, 2, 1, 0, 0.0f, new BlueprintCharacterClass[] { animal_class});
+            trick_resource.SetIncreasedByStat(0, StatType.Wisdom);
+
+            var bewildering_injury = library.Get<BlueprintBuff>("22b1d98502050cb4cbdb3679ac53115e");
+            var aiding_attack_target_buff = Helpers.CreateBuff("AidingAttackTargetBuff",
+                                                               "Aiding Attack",
+                                                               "The character can use this trick as a free action when he hits a creature with an attack. The next ally who makes an attack against the target creature before the start of the character’s next turn gains a + 2 bonus on that attack roll.",
+                                                               "",
+                                                               bewildering_injury.Icon,
+                                                               bewildering_injury.FxOnStart,
+                                                               Helpers.Create<AttackBonusAgainstTarget>(a =>
+                                                                                                       {
+                                                                                                           a.CheckCaster = true;
+                                                                                                           a.CheckCasterFriend = true;
+                                                                                                           a.Value = Common.createSimpleContextValue(2);
+                                                                                                       }
+                                                                                                       ),
+                                                               Common.createAddTargetAttackWithWeaponTrigger(Helpers.CreateActionList(Helpers.Create<ContextActionRemoveSelf>()),
+                                                                                                             Helpers.CreateActionList(),
+                                                                                                             only_hit: false,
+                                                                                                             not_reach: false,
+                                                                                                             only_melee: false,
+                                                                                                             wait_for_attack_to_resolve: true
+                                                                                                            )
+                                                              );
+
+            var aiding_attack = createStrikeTrick("AidingAttack", aiding_attack_target_buff.Name, aiding_attack_target_buff.Description, aiding_attack_target_buff.Icon,
+                                                     Common.createContextActionApplyBuff(aiding_attack_target_buff, Helpers.CreateContextDuration(), dispellable: false, duration_seconds: 9)
+                                                     );
+
+            var disorientating_injury = library.Get<BlueprintBuff>("1f1e42f8c06d7dc4bb70cc12c73dfb38");
+            var distracting_attack_buff = Helpers.CreateBuff("DistractingAttackEffectBuff",
+                                                             "Distracting Attack",
+                                                             "The character can use this trick as a free action before he makes an attack. If the attack hits, the target takes a –2 penalty on all attack rolls for 1 round.",
+                                                             "",
+                                                             disorientating_injury.Icon,
+                                                             disorientating_injury.FxOnStart,
+                                                             Common.createAddGenericStatBonus(-2, ModifierDescriptor.UntypedStackable, StatType.AdditionalAttackBonus)
+                                                             );
+            var distracting_attack = createStrikeTrick("DistractingAttack", distracting_attack_buff.Name, distracting_attack_buff.Description, distracting_attack_buff.Icon,
+                                                        Common.createContextActionApplyBuff(distracting_attack_buff, Helpers.CreateContextDuration(), dispellable: false, duration_seconds: 6)
+                                                        );
+
+            var shaken_buff = library.Get<BlueprintBuff>("25ec6cb6ab1845c48a95f9c20b034220");
+
+            var rattling_strike = createStrikeTrick("RattlingStrike", 
+                                                    "Rattling Strike",
+                                                    "The character can use this trick as a free action before he makes a melee attack. If the attack hits, the target is shaken for 1d4 rounds.",
+                                                    shaken_buff.Icon,
+                                                    Common.createContextActionApplyBuff(shaken_buff, Helpers.CreateContextDuration(diceType: DiceType.D4, diceCount: Common.createSimpleContextValue(1)), dispellable: false)
+                                                    );
+
+            var entangled_buff = library.Get<BlueprintBuff>("f7f6330726121cf4b90a6086b05d2e38");
+            var tangling_attack = createStrikeTrick("TanglingAtttack",
+                                        "Tangling Attack",
+                                        "The character can use this attack as a free action when he makes an attack. If the attack hits, the target is entangled for 1 round.",
+                                        entangled_buff.Icon,
+                                        Common.createContextActionApplyBuff(entangled_buff, Helpers.CreateContextDuration(), dispellable: false, duration_seconds: 6)
+                                        );
+
+            var grease = library.Get<BlueprintAbility>("95851f6e85fe87d4190675db0419d112");
+            var upending_strike = createStrikeTrick("UpendingStrike",
+                                                    "Upending Strike",
+                                                    "The character can use this trick as a free action just before he makes a melee attack. If the attack hits, he may make a free trip combat maneuver against the target.",
+                                                    grease.Icon,
+                                                    Helpers.Create<ContextActionCombatManeuver>(c => c.Type = Kingmaker.RuleSystem.Rules.CombatManeuver.Trip)
+                                                    );
+
+
+            trick_selection = Helpers.CreateFeatureSelection("AnimalCompanionTrickSelection",
+                                                             "Animal Companion Trick",
+                                                             "At 7th level and every 6 levels thereafter, a hunter’s animal companion learns a trick.\n"
+                                                             + "An animal companion can use these tricks a number of times per day equal to half its Hit Dice plus its Wisdom modifier",
+                                                             "",
+                                                             null,
+                                                             FeatureGroup.None
+                                                             );
+            trick_selection.AllFeatures = new BlueprintFeature[] { aiding_attack, distracting_attack, rattling_strike, tangling_attack, upending_strike };
+
+
+        }
+
+
+        static BlueprintFeature createStrikeTrick(string name, string display_name,  string description, UnityEngine.Sprite icon, GameAction action)
+        {
+            var buff = Helpers.CreateBuff(name + "Buff",
+                                          display_name,
+                                          description,
+                                          "",
+                                          icon,
+                                          null,
+                                          Common.createAddInitiatorAttackWithWeaponTrigger(Helpers.CreateActionList(action)),
+                                          Common.createAddInitiatorAttackWithWeaponTrigger(Helpers.CreateActionList(Helpers.Create<ContextActionRemoveSelf>()), only_hit: false, on_initiator: true)
+                                          );
+            var act_ability = Helpers.CreateActivatableAbility(name + "ActivatableAbility",
+                                                           display_name,
+                                                           description,
+                                                           "",
+                                                           icon,
+                                                           buff,
+                                                           AbilityActivationType.Immediately,
+                                                           CommandType.Free,
+                                                           null,
+                                                           Helpers.CreateActivatableResourceLogic(trick_resource, ResourceSpendType.Attack)
+                                                           );
+            act_ability.DeactivateImmediately = true;
+            act_ability.Group = ActivatableAbilityGroupExtension.HunterTrick.ToActivatableAbilityGroup();
+
+            var feature = Common.ActivatableAbilityToFeature(act_ability);
+            feature.AddComponent(Helpers.CreateAddAbilityResource(trick_resource));
+
+            var apply_buff = Common.createContextActionApplyBuff(buff, Helpers.CreateContextDuration(), true, false, true, false);
+            var ability = Helpers.CreateAbility(name + "Ability",
+                                                display_name,
+                                                description,
+                                                "",
+                                                icon,
+                                                AbilityType.Extraordinary,
+                                                CommandType.Free,
+                                                AbilityRange.Personal,
+                                                "Next Attack",
+                                                Helpers.savingThrowNone,
+                                                Helpers.CreateRunActions(apply_buff),
+                                                Helpers.CreateResourceLogic(trick_resource)
+                                                );
+            ability.setMiscAbilityParametersSelfOnly();
+            feature.ReplaceComponent<AddFacts>(a => a.Facts[0] = ability);
+
+            var give_feature = Helpers.CreateFeature(name + "GiveToAcFeature",
+                                                     display_name,
+                                                     description,
+                                                     "",
+                                                     icon,
+                                                     FeatureGroup.None,
+                                                     createAddFeatToAnimalCompanion(feature)
+                                                     );
+
+            return give_feature;
         }
 
 
@@ -998,6 +1353,7 @@ namespace CallOfTheWild
             var feather_step = ResourcesLibrary.TryGetBlueprint<Kingmaker.UnitLogic.Abilities.Blueprints.BlueprintAbility>("f3c0b267dd17a2a45a40805e31fe3cd1"); //for frog
             var longstrider  = ResourcesLibrary.TryGetBlueprint<Kingmaker.UnitLogic.Abilities.Blueprints.BlueprintAbility>("14c90900b690cac429b229efdf416127"); //for stag
             var summon_monster1 = ResourcesLibrary.TryGetBlueprint<Kingmaker.UnitLogic.Abilities.Blueprints.BlueprintAbility>("8fd74eddd9b6c224693d9ab241f25e84"); //for mouse
+            var summon_monster3 = ResourcesLibrary.TryGetBlueprint<Kingmaker.UnitLogic.Abilities.Blueprints.BlueprintAbility>("5d61dde0020bbf54ba1521f7ca0229dc"); //for snake
             (int, int)[] progressionStat = new (int, int)[3]{(7,2), (14, 4), (20, 6)};
             (int, int)[] progressionSkill = new (int, int)[3]{(7,4), (14, 6), (20, 8)};
             (int, int)[] progressionSpeed = new (int, int)[3]{(7,5), (14, 10), (20, 20)};
@@ -1094,6 +1450,20 @@ namespace CallOfTheWild
                                              allowed_classes,
                                              sacred_huntsmaster_archetype);
 
+            snake_focus = createToggleFocus("SnakeFocus",
+                                             "Animal Focus: Snake",
+                                             "The creature gains a +2 bonus on attack rolls when making attacks of opportunity and a +2 dodge bonus to AC against attacks of opportunity. These bonuses increase to +4 at 8th level and +6 at 15th level.",
+                                             "f43e0d4177b842c68ad7e24bda65359c",
+                                             "1b499ac8f94d4898bb82d33cbd815177",
+                                             summon_monster3.Icon,
+                                             Common.createACBonussOnAttacksOfOpportunity(Helpers.CreateContextValue(AbilityRankType.StatBonus), ModifierDescriptor.UntypedStackable),
+                                             Common.createAttackBonusOnAttacksOfOpportunity(Helpers.CreateContextValue(AbilityRankType.StatBonus), ModifierDescriptor.Dodge),
+                                             Helpers.CreateContextRankConfig(ContextRankBaseValueTypeExtender.MasterMaxClassLevelWithArchetype.ToContextRankBaseValueType(),
+                                                                            ContextRankProgression.Custom,
+                                                                            AbilityRankType.StatBonus,
+                                                                            customProgression: progressionStat,
+                                                                            classes: allowed_classes, archetype: sacred_huntsmaster_archetype));
+
 
             BlueprintComponent animal_foci = CallOfTheWild.Helpers.CreateAddFacts(bull_focus,
                                                                                        bear_focus,
@@ -1102,7 +1472,8 @@ namespace CallOfTheWild
                                                                                        monkey_focus,
                                                                                        owl_focus,
                                                                                        frog_focus,
-                                                                                       stag_focus);
+                                                                                       stag_focus,
+                                                                                       snake_focus);
 
             var wildshape_wolf = ResourcesLibrary.TryGetBlueprint<Kingmaker.Blueprints.Classes.BlueprintFeature>("19bb148cb92db224abb431642d10efeb");
             var feat = CallOfTheWild.Helpers.CreateFeature("AnimalFocusFeature",

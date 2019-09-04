@@ -3,6 +3,7 @@ using Kingmaker.Blueprints.Classes;
 using Kingmaker.Blueprints.Classes.Selection;
 using Kingmaker.Designers.EventConditionActionSystem.Actions;
 using Kingmaker.Designers.Mechanics.Buffs;
+using Kingmaker.Designers.Mechanics.Facts;
 using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem.Stats;
 using Kingmaker.Enums;
@@ -37,6 +38,9 @@ namespace CallOfTheWild
         static internal BlueprintFeature improved_stalwart;
         static internal BlueprintFeature furious_focus;
         static internal BlueprintFeature planar_wild_shape;
+        static internal BlueprintParametrizedFeature deity_favored_weapon;
+        static internal BlueprintFeature guided_hand;
+        static internal BlueprintFeature deadeyes_blessing;
 
         static internal void load()
         {
@@ -50,7 +54,81 @@ namespace CallOfTheWild
             FeralCombatTraining.load();
 
             ChannelEnergyEngine.createQuickChannel();
+            ChannelEnergyEngine.createChannelSmite();
             createPlanarWildShape();
+            createGuidedHand();
+            createDeadeyesBlessing();
+        }
+
+        static void createDeadeyesBlessing()
+        {
+            var weapon_focus = library.Get<BlueprintParametrizedFeature>("1e1f627d26ad36f43bbd26cc2bf8ac7e");
+            deadeyes_blessing = Helpers.CreateFeature("DeadeyesBlessingFeature",
+                                                "Deadeye’s Blessing",
+                                                "You can use your Wisdom modifier instead of your Dexterity modifier on ranged attack rolls when using a bow.",
+                                                "",
+                                                null,
+                                                FeatureGroup.Feat,
+                                                Helpers.Create<NewMechanics.AttackStatReplacementForWeaponCategory>(c =>
+                                                                                                                    {
+                                                                                                                        c.categories = new WeaponCategory[] { WeaponCategory.Longbow, WeaponCategory.Shortbow};
+                                                                                                                        c.ReplacementStat = StatType.Wisdom;
+                                                                                                                    }
+                                                                                                                   ),
+                                                Common.createPrerequisiteParametrizedFeatureWeapon(deity_favored_weapon, WeaponCategory.Longbow),
+                                                Common.createPrerequisiteParametrizedFeatureWeapon(weapon_focus, WeaponCategory.Longbow)
+                                                );
+            deadeyes_blessing.Groups = deadeyes_blessing.Groups.AddToArray(FeatureGroup.CombatFeat);
+            library.AddCombatFeats(deadeyes_blessing);
+        }
+
+
+
+        static void createGuidedHand()
+        {
+            guided_hand = Helpers.CreateFeature("GuidedHandFeature",
+                                                "Guided Hand",
+                                                "With your deity’s favored weapon, you can use your Wisdom modifier instead of your Strength or Dexterity modifier on attack rolls.",
+                                                "",
+                                                null,
+                                                FeatureGroup.Feat,
+                                                Helpers.Create<NewMechanics.AttackStatReplacementIfHasParametrizedFeature>(c =>
+                                                                                                                            {
+                                                                                                                                c.feature = deity_favored_weapon;
+                                                                                                                                c.ReplacementStat = StatType.Wisdom;
+                                                                                                                            }
+                                                                                                                            ),
+                                                Helpers.PrerequisiteFeature(ChannelEnergyEngine.channel_smite)
+                                                );
+            library.AddFeats(guided_hand);
+        }
+
+        internal static void createDeityFavoredWeapon()
+        {
+            deity_favored_weapon = library.CopyAndAdd<BlueprintParametrizedFeature>("1e1f627d26ad36f43bbd26cc2bf8ac7e", "DeityFavoredWeapon", "");
+            deity_favored_weapon.SetName("Deity's Favored Weapon");
+            deity_favored_weapon.SetDescription("");
+            deity_favored_weapon.Groups = new FeatureGroup[0];
+            deity_favored_weapon.ComponentsArray = new BlueprintComponent[0];
+
+            var deity_selection = library.Get<BlueprintFeatureSelection>("59e7a76987fe3b547b9cce045f4db3e4");
+
+            foreach (var d in deity_selection.AllFeatures)
+            {
+                var add_features = d.GetComponents<AddFeatureOnClassLevel>();
+                var starting_items = d.GetComponent<AddStartingEquipment>();
+                if (add_features.Count() == 0 && starting_items!= null)
+                {
+                    var weapon_category = starting_items.CategoryItems[0];
+                    d.AddComponent(Common.createAddParametrizedFeatures(deity_favored_weapon, weapon_category));
+                }
+                foreach (var add_feature in add_features)
+                {
+                    var proficiency = add_feature.Feature.GetComponent<AddProficiencies>();
+                    var weapon_category = proficiency == null ? WeaponCategory.UnarmedStrike : proficiency.WeaponProficiencies[0];
+                    d.AddComponent(Common.createAddParametrizedFeatures(deity_favored_weapon, weapon_category));
+                }
+            }
         }
 
 
@@ -170,6 +248,9 @@ namespace CallOfTheWild
         {
             var arcane_strike_feature = library.Get<BlueprintFeature>("0ab2f21a922feee4dab116238e3150b4");
             arcane_strike_feature.SetIcon(LoadIcons.Image2Sprite.Create(@"FeatIcons/Icon_Arcane_Strike.png"));
+            var arcane_strike_ability = arcane_strike_feature.GetComponent<AddFacts>().Facts[0] as BlueprintActivatableAbility;
+            arcane_strike_ability.SetIcon(arcane_strike_feature.Icon);
+            arcane_strike_ability.Buff.SetIcon(arcane_strike_feature.Icon);
 
             var wings_feat = library.Get<BlueprintFeature>("d9bd0fde6deb2e44a93268f2dfb3e169");
             wings_feat.SetIcon(LoadIcons.Image2Sprite.Create(@"FeatIcons/Icon_Wings.png"));
@@ -223,7 +304,7 @@ namespace CallOfTheWild
             library.AddCombatFeats(furious_focus);
         }
 
-        static internal void createRagingBrutality()
+        static void createRagingBrutality()
         {
             //var destructive_smite = library.Get<BlueprintActivatableAbility>("e69898f762453514780eb5e467694bdb");
             var power_attack_buff = library.Get<BlueprintBuff>("5898bcf75a0942449a5dc16adc97b279");

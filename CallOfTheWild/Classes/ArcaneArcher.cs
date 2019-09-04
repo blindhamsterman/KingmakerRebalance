@@ -35,12 +35,26 @@ namespace CallOfTheWild
     static class ArcaneArcherClass
     {
         static LibraryScriptableObject library => Main.library;
-        internal static BlueprintCharacterClass arcanearcher;
-        internal static BlueprintCharacterClass[] arcanearcherArray;
+        static internal BlueprintCharacterClass arcanearcher;
+        static internal BlueprintCharacterClass[] arcanearcherArray;
+        static internal BlueprintProgression arcane_archer_progression;
+        static internal BlueprintFeature enhance_arrows_magic;
+        static internal BlueprintFeature enhance_arrows_elememtal;
+        static internal BlueprintFeature enhance_arrows_distance;
+        static internal BlueprintFeature enhance_arrows_burst;
+        static internal BlueprintFeature enhance_arrows_aligned;
+        static internal BlueprintFeatureSelection aracane_archer_spellcasting;
+        static internal BlueprintFeatureSelection arcane_archer_feat;
+        static internal BlueprintFeature seeker_arrow;
+        static internal BlueprintFeature phase_arrow;
+        static internal BlueprintFeature hail_of_arrows;
+        static internal BlueprintFeature arrow_of_death;
+
+        static internal BlueprintFeature arcane_archer_proficiencies;
 
         static internal ActivatableAbilityGroup enhance_arrows_elemental_group = ActivatableAbilityGroupExtension.EnhanceArrowsElemental.ToActivatableAbilityGroup();//ActivatableAbilityGroup.TrueMagus;
 
-        internal static void Load()
+        internal static void CreateArcaneArcherClass()
         {
             var library = Main.library;
             if (ArcaneArcherClass.arcanearcher != null) return;
@@ -107,53 +121,8 @@ namespace CallOfTheWild
 
             arcanearcher.StartingItems = ranger.StartingItems;
 
-            var progression = Helpers.CreateProgression("ArcaneArcherProgression",
-                arcanearcher.Name,
-                arcanearcher.Description,
-                "780848b1fb1f4d73a4f1bf64ae5c21b2",
-                arcanearcher.Icon, // Need an icon
-                FeatureGroup.None);
-            progression.Classes = arcanearcherArray;
-
-
-            var proficiencies = library.CopyAndAdd<BlueprintFeature>(
-                "c5e479367d07d62428f2fe92f39c0341", // ranger proficiencies
-                "ArcaneArcherProficiencies",
-                "85be49f802ec4156ad34a3b88dd64fb5");
-            proficiencies.SetName("Arcane Archer Proficiencies");
-            proficiencies.SetDescription("An arcane archer is proficient with all simple and martial weapons, light armor, medium armor, and shields");
-
-            var allowed_weapons = new BlueprintWeaponType[4];
-            allowed_weapons[0] = library.Get<BlueprintWeaponType>("99ce02fb54639b5439d07c99c55b8542"); // shortbow
-            allowed_weapons[1] = library.Get<BlueprintWeaponType>("7a1211c05ec2c46428f41e3c0db9423f"); // longbow
-            allowed_weapons[2] = library.Get<BlueprintWeaponType>("1ac79088a7e5dde46966636a3ac71c35"); // composite longbow
-            allowed_weapons[3] = library.Get<BlueprintWeaponType>("011f6f86a0b16df4bbf7f40878c3e80b"); // composite shortbow
-
-            // TODO: implement these.
-            var entries = new List<LevelEntry> {
-                Helpers.LevelEntry(1, proficiencies, CreateSpellbookChoice(), CreateEnhanceArrowsMagic(allowed_weapons),
-                                   library.Get<BlueprintFeature>("d3e6275cfa6e7a04b9213b7b292a011c"), // ray calculate feature
-                                   library.Get<BlueprintFeature>("62ef1cdb90f1d654d996556669caf7fa")),
-                Helpers.LevelEntry(2, CreateImbueArrow(allowed_weapons)),
-                Helpers.LevelEntry(3, CreateEnhanceArrowsElemental(allowed_weapons)),
-                Helpers.LevelEntry(4),// , CreateSeekerArrow(allowed_weapons)),
-                Helpers.LevelEntry(5, CreateArcheryFeatSelection()), // Distant arrows aren't possible, providing a feat for this level seems reasonable seeing as the class also doesn't get spellcasting here.
-                Helpers.LevelEntry(6),// , CreatePhaseArrow(allowed_weapons)),
-                Helpers.LevelEntry(7, CreateEnhanceArrowsBurst()),
-                Helpers.LevelEntry(8),// , CreateHailOfArrows(allowed_weapons)),
-                Helpers.LevelEntry(9, CreateEnhanceArrowsAligned(allowed_weapons)),
-                Helpers.LevelEntry(10),//,  CreateArrowOfDeath(allowed_weapons)),
-            };
-
-            progression.UIDeterminatorsGroup = new BlueprintFeatureBase[] {
-                proficiencies
-                // TODO: 1st level stuff
-            };
-
-            progression.UIGroups = Helpers.CreateUIGroups(); // TODO
-            progression.LevelEntries = entries.ToArray();
-
-            arcanearcher.Progression = progression;
+            createArcaneArcherProgression();
+            arcanearcher.Progression = arcane_archer_progression;
 
             // Arcane archers do not gets spells at levels 1,5 and 9, we handle level 1 by giving spellbook selection at level 2
             // we handle 5 and 9 by adding a skip levels for spell progression component to progressiom.
@@ -162,11 +131,65 @@ namespace CallOfTheWild
             skipLevels.Add(9);
             arcanearcher.AddComponent(Helpers.Create<SkipLevelsForSpellProgression>(s => s.Levels = skipLevels.ToArray()));
 
-            arcanearcher.Archetypes = Array.Empty<BlueprintArchetype>();
-
             Helpers.RegisterClass(arcanearcher);
             Helpers.classes.Add(arcanearcher);
             addToPrestigeClasses();
+        }
+
+        static void createArcaneArcherProgression()
+        {
+
+            var allowed_weapons = new BlueprintWeaponType[4];
+            allowed_weapons[0] = library.Get<BlueprintWeaponType>("99ce02fb54639b5439d07c99c55b8542"); // shortbow
+            allowed_weapons[1] = library.Get<BlueprintWeaponType>("7a1211c05ec2c46428f41e3c0db9423f"); // longbow
+            allowed_weapons[2] = library.Get<BlueprintWeaponType>("1ac79088a7e5dde46966636a3ac71c35"); // composite longbow
+            allowed_weapons[3] = library.Get<BlueprintWeaponType>("011f6f86a0b16df4bbf7f40878c3e80b"); // composite shortbow
+            createArcaneArcherProficiencies();
+            CreateSpellbookChoice();
+            CreateEnhanceArrowsMagic(allowed_weapons);
+            CreateEnhanceArrowsElemental(allowed_weapons);
+            CreateArcheryFeatSelection();
+            CreateEnhanceArrowsBurst();
+            CreateEnhanceArrowsAligned(allowed_weapons);
+
+            arcane_archer_progression = Helpers.CreateProgression("ArcaneArcherProgression",
+                            arcanearcher.Name,
+                            arcanearcher.Description,
+                            "780848b1fb1f4d73a4f1bf64ae5c21b2",
+                            arcanearcher.Icon,
+                            FeatureGroup.None);
+            arcane_archer_progression.Classes = arcanearcherArray;
+
+            arcane_archer_progression.LevelEntries = new LevelEntry[] {
+                Helpers.LevelEntry(1, arcane_archer_proficiencies, enhance_arrows_magic),
+                Helpers.LevelEntry(2, Hinterlander.imbue_arrow, aracane_archer_spellcasting),
+                Helpers.LevelEntry(3, enhance_arrows_elememtal),
+                Helpers.LevelEntry(4),// , CreateSeekerArrow(allowed_weapons)),
+                Helpers.LevelEntry(5, arcane_archer_feat), // Distant arrows aren't possible, providing a feat for this level seems reasonable seeing as the class also doesn't get spellcasting here.
+                Helpers.LevelEntry(6),// , CreatePhaseArrow(allowed_weapons)),
+                Helpers.LevelEntry(7, enhance_arrows_burst),
+                Helpers.LevelEntry(8),// , CreateHailOfArrows(allowed_weapons)),
+                Helpers.LevelEntry(9, enhance_arrows_aligned),
+                Helpers.LevelEntry(10),//,  CreateArrowOfDeath(allowed_weapons)),
+            };
+
+            arcane_archer_progression.UIDeterminatorsGroup = new BlueprintFeatureBase[] { arcane_archer_proficiencies };
+            arcane_archer_progression.UIGroups = new UIGroup[]  {Helpers.CreateUIGroup(arcane_archer_feat),
+                                                         Helpers.CreateUIGroup(seeker_arrow, phase_arrow, hail_of_arrows, arrow_of_death),
+                                                         Helpers.CreateUIGroup(enhance_arrows_magic, enhance_arrows_elememtal, enhance_arrows_burst, enhance_arrows_aligned),
+                                                         Helpers.CreateUIGroup(aracane_archer_spellcasting, Hinterlander.imbue_arrow)
+                                                        };
+        }
+
+        static void createArcaneArcherProficiencies()
+        {
+            arcane_archer_proficiencies = library.CopyAndAdd<BlueprintFeature>(
+            "c5e479367d07d62428f2fe92f39c0341", // ranger proficiencies
+            "ArcaneArcherProficiencies",
+            "85be49f802ec4156ad34a3b88dd64fb5");
+            arcane_archer_proficiencies.SetName("Arcane Archer Proficiencies");
+            arcane_archer_proficiencies.SetDescription("An arcane archer is proficient with all simple and martial weapons, light armor, medium armor, and shields");
+
         }
         static void addToPrestigeClasses()
         {
@@ -184,10 +207,9 @@ namespace CallOfTheWild
             Common.addReplaceSpellbook(library.Get<BlueprintFeatureSelection>("ea4c7c56d90d413886876152b03f9f5f"), bard.Spellbook, "ArcaneArcherBard",
                 Common.createPrerequisiteClassSpellLevel(bard, 1));
         }
-        static BlueprintFeature CreateEnhanceArrowsMagic(BlueprintWeaponType[] allowed_weapons)
+        static void CreateEnhanceArrowsMagic(BlueprintWeaponType[] allowed_weapons)
         {
-
-            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsMagic", "Enhance Arrows (Magic)",
+            enhance_arrows_magic = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsMagic", "Enhance Arrows (Magic)",
                 $"At 1st level, every nonmagical arrow an arcane archer nocks and lets fly becomes magical, gaining a +1 enhancement bonus. " +
                 "Unlike magic weapons created by normal means, the archer need not spend gold pieces to accomplish this task. However, an archer’s " +
                 "magic arrows only function for him.",
@@ -197,7 +219,7 @@ namespace CallOfTheWild
                 Helpers.Create<EnhanceArrowsMagic>(u => u.weapon_types = allowed_weapons));
         }
 
-        static BlueprintFeature CreateEnhanceArrowsElemental(BlueprintWeaponType[] allowed_weapons)
+        static void CreateEnhanceArrowsElemental(BlueprintWeaponType[] allowed_weapons)
         {
             var resource = Helpers.CreateAbilityResource("EnhanceArrowsElementalResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
             resource.SetFixedResource(1);
@@ -233,7 +255,7 @@ namespace CallOfTheWild
                 shockArrowBuff.Name, shockArrowBuff.Description, "", shockArrowBuff.Icon, AbilityType.Supernatural, CommandType.Free,
                 AbilityRange.Weapon, "Permanent", "N/A", actionShock, Helpers.CreateResourceLogic(resource));
 
-            var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
+            enhance_arrows_elememtal = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsElemental", "Enhance Arrows (Elemental)",
                 $"At 3rd level, In addition, the arcane archer’s arrows gain a number of additional qualities as he gains additional " +
                 "levels. The elemental, elemental burst, and aligned qualities can be changed once per day, when the arcane archer prepares " +
                 "spells or, in the case of spontaneous spellcasters, after 8 hours of rest." +
@@ -245,10 +267,10 @@ namespace CallOfTheWild
                 Helpers.CreateAddFact(abilityFrost),
                 Helpers.CreateAddFact(abilityShock),
                 Helpers.CreateAddAbilityResource(resource));
-            return feat;
+
         }
 
-        static BlueprintFeature CreateEnhanceArrowsAligned(BlueprintWeaponType[] allowed_weapons)
+        static void CreateEnhanceArrowsAligned(BlueprintWeaponType[] allowed_weapons)
         {
             var resource = Helpers.CreateAbilityResource("EnhanceArrowsAlignedResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
             resource.SetFixedResource(1);
@@ -314,7 +336,7 @@ namespace CallOfTheWild
                             Helpers.Create<AbilityCasterAlignment>(c => c.Alignment = AlignmentMaskType.Any & ~AlignmentMaskType.Chaotic));
 
             //feature
-            var feat = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsAligned", "Enhance Arrows (Aligned)",
+            enhance_arrows_aligned = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsAligned", "Enhance Arrows (Aligned)",
                 $"At 9th level, every non-magical arrow fired by an arcane archer gains one of the following aligned weapon qualities: " +
                 "anarchic, axiomatic, holy, or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment " +
                 "(for example, a lawful good arcane archer could not choose anarchic or unholy as his weapon quality).",
@@ -326,12 +348,12 @@ namespace CallOfTheWild
                 Helpers.CreateAddFact(abilityAnarchic),
                 Helpers.CreateAddFact(abilityAxiomatic),
                 Helpers.CreateAddAbilityResource(resource));
-            return feat;
+
         }
 
-        static BlueprintFeature CreateEnhanceArrowsBurst()
+        static void CreateEnhanceArrowsBurst()
         {
-            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsBurst", "Enhance Arrows (Burst)",
+            enhance_arrows_burst = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsBurst", "Enhance Arrows (Burst)",
                 $"At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: " +
                 "flaming burst, icy burst, or shocking burst. This ability replaces the ability gained at 3rd level.",
                 "",
@@ -340,16 +362,16 @@ namespace CallOfTheWild
         }
 
         // Not currently using this feature, if we can find a way to get it to work, then it may get added.
-        static BlueprintFeature CreateEnhanceArrowsDistance()
+        static void CreateEnhanceArrowsDistance()
         {
-            return Helpers.CreateFeature("ArcaneArcherEnhanceArrowsDistance", "Enhance Arrows (Distance)",
+            enhance_arrows_distance = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsDistance", "Enhance Arrows (Distance)",
                 $"At 5th level, every non-magical arrow fired by an arcane archer gains the distance weapon quality.",
                 "",
                 Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
                 FeatureGroup.None);
         }
 
-        static BlueprintFeatureSelection CreateSpellbookChoice()
+        static void CreateSpellbookChoice()
         {
             var comps = new List<BlueprintComponent>();
             var compsArray = comps.ToArray();
@@ -369,42 +391,7 @@ namespace CallOfTheWild
             return aa_progression;
         }
 
-        static BlueprintFeature CreateImbueArrow(BlueprintWeaponType[] allowed_weapons)
-        {
-            /* TODO: At 2nd level, an arcane archer gains the ability to place an area spell upon an arrow. When the arrow is fired, 
-            the spell’s area is centered where the arrow lands, even if the spell could normally be centered only on the caster. 
-            This ability allows the archer to use the bow’s range rather than the spell’s range. A spell cast in this way uses its 
-            standard casting time and the arcane archer can fire the arrow as part of the casting. The arrow must be fired during 
-            the round that the casting is completed or the spell is wasted. If the arrow misses, the spell is wasted. */
 
-            var buff = Helpers.CreateBuff("ImbueArrowsBuff", "Imbue Arrows", $"Whilst active, you use the range of your bow and make a ranged weapon attack as part of casting area of effect spells", "",
-                        Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), null, Helpers.Create<ImbueArrows>(u => { u.weapon_types = allowed_weapons; }));
-            var ability = Helpers.CreateActivatableAbility("ImbueArrowsAbility",
-                                                                    buff.Name,
-                                                                    buff.Description,
-                                                                    "",
-                                                                    buff.Icon,
-                                                                    buff,
-                                                                    AbilityActivationType.Immediately,
-                                                                    CommandType.Free,
-                                                                    null,
-                                                                    Helpers.Create<NewMechanics.ActivatableAbilityMainWeaponTypeAllowed>(c => c.weapon_types = allowed_weapons));
-
-
-            var feat = Helpers.CreateFeature("ImbueArrowsFeature", "Imbue Arrows",
-                $"At 2nd level, an arcane archer gains the ability to place an area spell upon an arrow. When the arrow is fired, " +
-            "the spell’s area is centered where the arrow lands, even if the spell could normally be centered only on the caster. " +
-            "This ability allows the archer to use the bow’s range rather than the spell’s range. A spell cast in this way uses its " +
-            "standard casting time and the arcane archer can fire the arrow as part of the casting. The arrow must be fired during " +
-            "the round that the casting is completed or the spell is wasted. If the arrow misses, the spell is wasted.",
-                "",
-                Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
-                FeatureGroup.None,
-                Helpers.CreateAddFact(ability));
-
-
-            return feat;
-        }
         static BlueprintFeature CreateSeekerArrow(BlueprintWeaponType[] allowed_weapons)
         {
             /* TODO: At 4th level, an arcane archer can launch an arrow at a target known to him within range, and the arrow travels 
@@ -638,58 +625,6 @@ namespace CallOfTheWild
         }
     }
 
-
-    public class ImbueArrows : OwnedGameLogicComponent<UnitDescriptor>, IAbilityTargetSelectionUIHandler, IGlobalSubscriber
-
-    {
-        public BlueprintWeaponType[] weapon_types;
-        Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange range = Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Custom;
-        Feet oldCustomRange = new Kingmaker.Utility.Feet(0);
-        Feet newCustomRange = new Kingmaker.Utility.Feet(0);
-
-        public static ImbueArrows Instance { get; private set; }
-        public void Initialize()
-        {
-            this.CursorTarget.SetActive(false);
-            EventBus.Subscribe(this);
-            ImbueArrows.Instance = this;
-        }
-        public void HandleAbilityTargetSelectionStart(AbilityData evt)
-        {
-            if (evt.Blueprint.IsSpell)
-            {
-                var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
-                var spellrange = evt.Blueprint.Range;
-                oldCustomRange = evt.Blueprint.CustomRange;
-                if (evt.Blueprint.HasAreaEffect())
-                {
-                    range = evt.Blueprint.Range;
-                    evt.Blueprint.Range = Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Weapon;
-                    evt.Blueprint.CustomRange = weapon.Blueprint.AttackRange;
-                    newCustomRange = evt.Blueprint.CustomRange;
-                }
-                EventBus.Subscribe(this);
-            }
-        }
-        public void HandleAbilityTargetSelectionEnd(AbilityData evt)
-        {
-            if (evt.Blueprint.IsSpell)
-            {
-                if (range != Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Custom)
-                {
-                    evt.Blueprint.Range = range;
-                    range = Kingmaker.UnitLogic.Abilities.Blueprints.AbilityRange.Custom;
-                }
-                if (oldCustomRange != newCustomRange)
-                {
-                    evt.Blueprint.CustomRange = oldCustomRange;
-                }
-            }
-
-        }
-
-        public GameObject CursorTarget;
-    }
 
 
 }

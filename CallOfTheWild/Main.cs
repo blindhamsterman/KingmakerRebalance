@@ -123,11 +123,14 @@ public class Main
                 CallOfTheWild.Rebalance.giveDifficultTerrainImmunityToAirborneUnits();
                 CallOfTheWild.Rebalance.fixVitalStrike();
                 CallOfTheWild.Rebalance.fixArcheologistLuck();
+                CallOfTheWild.Rebalance.fixElementalMovementWater();
+                CallOfTheWild.Rebalance.addRangerImprovedFavoredTerrain();
                 //CallOfTheWild.Rebalance.fixNaturalACStacking();
 
                 CallOfTheWild.Wildshape.load();
                 CallOfTheWild.NewRagePowers.load();
                 CallOfTheWild.NewSpells.load();
+                CallOfTheWild.NewFeats.createDeityFavoredWeapon();
 
 #if DEBUG
                 CallOfTheWild.HexEngine.test_mode = true;
@@ -151,6 +154,7 @@ public class Main
                 CallOfTheWild.NewFeats.load();
 
                 CallOfTheWild.Warpriest.createWarpriestClass();
+                CallOfTheWild.Hinterlander.createHinterlanderClass();
 
                 CallOfTheWild.CleanUp.processRage();
 

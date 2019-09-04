@@ -334,6 +334,14 @@ namespace CallOfTheWild
         }
 
 
+        static internal SpellImmunityToSpellDescriptor createSpellImmunityToSpellDescriptor(SpellDescriptor descriptor)
+        {
+            var b = Helpers.Create<SpellImmunityToSpellDescriptor>();
+            b.Descriptor = descriptor;
+            return b;
+        }
+
+
         static internal SpecificBuffImmunity createSpecificBuffImmunity(BlueprintBuff buff)
         {
             var b = Helpers.Create<SpecificBuffImmunity>();
@@ -430,12 +438,13 @@ namespace CallOfTheWild
             return a;
         }
 
-        static internal PrerequisiteArchetypeLevel createPrerequisiteArchetypeLevel(BlueprintCharacterClass character_class, BlueprintArchetype archetype, int level)
+        static internal PrerequisiteArchetypeLevel createPrerequisiteArchetypeLevel(BlueprintCharacterClass character_class, BlueprintArchetype archetype, int level, bool any = false)
         {
             var p = Helpers.Create<PrerequisiteArchetypeLevel>();
             p.CharacterClass = character_class;
             p.Archetype = archetype;
             p.Level = level;
+            p.Group = any ? Prerequisite.GroupType.Any : Prerequisite.GroupType.All;
             return p;
         }
 
@@ -661,6 +670,17 @@ namespace CallOfTheWild
         }
 
 
+        static internal Kingmaker.UnitLogic.FactLogic.AddOutgoingPhysicalDamageProperty createAddOutgoingGhost(bool check_range = false, bool is_ranged = false)
+        {
+            var a = Helpers.Create<AddOutgoingPhysicalDamageProperty>();
+            a.CheckRange = check_range;
+            a.IsRanged = is_ranged;
+            a.AddReality = true;
+            a.Reality = DamageRealityType.Ghost;
+            return a;
+        }
+
+
 
         static internal NewMechanics.ContextWeaponTypeDamageBonus createContextWeaponTypeDamageBonus(ContextValue bonus, params BlueprintWeaponType[] weapon_types)
         {
@@ -670,23 +690,20 @@ namespace CallOfTheWild
             return c;
         }
 
-        internal static BlueprintFeatureSelection copyRenameSelection(string original_selection_guid, string name_prefix, string description, string selection_guid, string[] feature_guids)
+        internal static BlueprintFeatureSelection copyRenameSelection(string original_selection_guid, string name_prefix, string description, string selection_guid)
         {
             var old_selection = library.Get<BlueprintFeatureSelection>(original_selection_guid);
             var new_selection = library.CopyAndAdd<BlueprintFeatureSelection>(original_selection_guid, name_prefix + old_selection, selection_guid);
 
             new_selection.SetDescription(description);
 
-            BlueprintFeature[] new_features = new BlueprintFeature[feature_guids.Length];
+            BlueprintFeature[] new_features = new BlueprintFeature[old_selection.AllFeatures.Length];
 
             var old_features = old_selection.AllFeatures;
-            if (new_features.Length != old_features.Length)
-            {
-                throw Main.Error($"Incorrect number of guids passed to Common.copyRenameSelection:: guids.Length =  {new_features.Length}, terrains.Length: {old_features.Length}");
-            }
+
             for (int i = 0; i < old_features.Length; i++)
             {
-                new_features[i] = library.CopyAndAdd<BlueprintFeature>(old_features[i].AssetGuid, name_prefix + old_features[i].name, feature_guids[i]);
+                new_features[i] = library.CopyAndAdd<BlueprintFeature>(old_features[i].AssetGuid, name_prefix + old_features[i].name, "");
                 new_features[i].SetDescription(description);
             }
             new_selection.AllFeatures = new_features;
@@ -1128,7 +1145,8 @@ namespace CallOfTheWild
         static internal Kingmaker.Designers.Mechanics.Facts.SavingThrowBonusAgainstDescriptor createSavingThrowBonusAgainstDescriptor(int bonus, ModifierDescriptor descriptor, SpellDescriptor spell_descriptor)
         {
             Kingmaker.Designers.Mechanics.Facts.SavingThrowBonusAgainstDescriptor c = Helpers.Create<Kingmaker.Designers.Mechanics.Facts.SavingThrowBonusAgainstDescriptor>();
-            c.Bonus = bonus;
+            c.Value = bonus;
+            c.Bonus = createSimpleContextValue(0);
             c.ModifierDescriptor = descriptor;
             c.SpellDescriptor = spell_descriptor;
             return c;
@@ -2082,11 +2100,11 @@ namespace CallOfTheWild
         }
 
 
-        static internal NewMechanics.ContextWeaponDamageDiceReplacement createContextWeaponDamageDiceReplacement(BlueprintParametrizedFeature required_parametrized_feature,
+        static internal NewMechanics.ContextWeaponDamageDiceReplacement createContextWeaponDamageDiceReplacement(BlueprintParametrizedFeature[] required_parametrized_features,
                                                                                                                  ContextValue value, params DiceFormula[] dice_formulas)
         {
             var c = Helpers.Create<NewMechanics.ContextWeaponDamageDiceReplacement>();
-            c.required_parametrized_feature = required_parametrized_feature;
+            c.required_parametrized_features = required_parametrized_features;
             c.value = value;
             c.dice_formulas = dice_formulas;
             return c;
@@ -2295,9 +2313,155 @@ namespace CallOfTheWild
         }
 
 
+        public static NewMechanics.AddWeaponEnergyDamageDice createAddWeaponEnergyDamageDiceBuff(ContextDiceValue dice_value, DamageEnergyType energy, params AttackType[] attack_types)
+        {
+            var a = Helpers.Create<NewMechanics.AddWeaponEnergyDamageDice>();
+            a.dice_value = dice_value;
+            a.Element = energy;
+            a.range_types = attack_types;
+            return a;
+        }
+
+
+        public static NewMechanics.AddWeaponEnergyDamageDiceIfHasFact createAddWeaponEnergyDamageDiceBuffIfHasFact(ContextDiceValue dice_value, DamageEnergyType energy, BlueprintUnitFact checked_fact, 
+                                                                                                                    params AttackType[] attack_types)
+        {
+            var a = Helpers.Create<NewMechanics.AddWeaponEnergyDamageDiceIfHasFact>();
+            a.dice_value = dice_value;
+            a.Element = energy;
+            a.range_types = attack_types;
+            a.checked_fact = checked_fact;
+            return a;
+        }
+
+
         public static void setAsFullRoundAction(BlueprintAbility spell)
         {
             Helpers.SetField(spell, "m_IsFullRoundAction", true);
+        }
+
+
+        public static void addFeaturePrerequisiteOr(BlueprintFeature feature,  BlueprintFeature prerequisite)
+        {
+            var features_from_list = feature.GetComponent<PrerequisiteFeaturesFromList>();
+            if (features_from_list == null)
+            {
+                features_from_list = Helpers.PrerequisiteFeaturesFromList(prerequisite);
+                feature.AddComponent(features_from_list);
+            }
+
+            if (!features_from_list.Features.Contains(prerequisite))
+            {
+                features_from_list.Features = features_from_list.Features.AddToArray(prerequisite);
+            }
+        }
+
+
+        public static AddTargetAttackWithWeaponTrigger createAddTargetAttackWithWeaponTrigger(ActionList action_self, ActionList action_attacker, WeaponCategory[] categories = null,
+                                                                                             bool only_hit = true, bool not_reach = true, bool only_melee = true, bool not = false,
+                                                                                             bool wait_for_attack_to_resolve = false, bool only_critical_hit = false)
+        {
+            var a = Helpers.Create<AddTargetAttackWithWeaponTrigger>();
+
+            a.ActionOnSelf = action_self;
+            a.ActionsOnAttacker = action_attacker;
+            a.OnlyHit = only_hit;
+            a.NotReach = not_reach;
+            a.OnlyMelee = only_melee;
+            a.CheckCategory = categories != null;
+            a.Categories = categories;
+            a.Not = not;
+            a.WaitForAttackResolve = wait_for_attack_to_resolve;
+            a.CriticalHit = only_critical_hit;
+            return a;
+        }
+
+
+        public static ManeuverBonus createManeuverBonus(CombatManeuver maneuver_type, int bonus)
+        {
+            var m = Helpers.Create<ManeuverBonus>();
+            m.Bonus = bonus;
+            m.Type = maneuver_type;
+            return m;
+        }
+
+
+        public static ManeuverDefenceBonus createManeuverDefenseBonus(CombatManeuver maneuver_type, int bonus)
+        {
+            var m = Helpers.Create<ManeuverDefenceBonus>();
+            m.Bonus = bonus;
+            m.Type = maneuver_type;
+            return m;
+        }
+
+
+        public static NewMechanics.ContextManeuverDefenceBonus createContextManeuverDefenseBonus(CombatManeuver maneuver_type, ContextValue bonus)
+        {
+            var m = Helpers.Create<NewMechanics.ContextManeuverDefenceBonus>();
+            m.Bonus = bonus;
+            m.Type = maneuver_type;
+            return m;
+        }
+
+
+        public static NewMechanics.ContextSavingThrowBonusAgainstFact createContextSavingThrowBonusAgainstFact(BlueprintFeature fact, AlignmentComponent alignment, ContextValue value, ModifierDescriptor descriptor)
+        {
+            var c = Helpers.Create<NewMechanics.ContextSavingThrowBonusAgainstFact>();
+            c.CheckedFact = fact;
+            c.Alignment = alignment;
+            c.Descriptor = descriptor;
+            c.Bonus = value;
+            return c;
+        }
+
+
+        public static NewMechanics.ContextACBonusAgainstFactOwner createContextACBonusAgainstFactOwner(BlueprintFeature fact, AlignmentComponent alignment, ContextValue value, ModifierDescriptor descriptor)
+        {
+            var c = Helpers.Create<NewMechanics.ContextACBonusAgainstFactOwner>();
+            c.CheckedFact = fact;
+            c.Alignment = alignment;
+            c.Descriptor = descriptor;
+            c.Bonus = value;
+            return c;
+        }
+
+
+        public static NewMechanics.AttackBonusOnAttacksOfOpportunity createAttackBonusOnAttacksOfOpportunity(ContextValue value, ModifierDescriptor descriptor)
+        {
+            var a = Helpers.Create<NewMechanics.AttackBonusOnAttacksOfOpportunity>();
+            a.Value = value;
+            a.Descriptor = descriptor;
+            return a;
+        }
+
+
+        public static ACBonusAgainstAttacks createACBonussOnAttacksOfOpportunity(ContextValue value, ModifierDescriptor descriptor)
+        {
+            var a = Helpers.Create<ACBonusAgainstAttacks>();
+            a.Value = value;
+            a.Descriptor = descriptor;
+            a.OnlyAttacksOfOpportunity = true;
+            return a;
+        }
+
+
+        public static PrerequisiteCasterTypeSpellLevel createPrerequisiteCasterTypeSpellLevel(bool is_arcane, int spell_level, bool any = false)
+        {
+            var p = Helpers.Create<PrerequisiteCasterTypeSpellLevel>();
+            p.IsArcane = is_arcane;
+            p.RequiredSpellLevel = spell_level;
+            p.Group = any ? Prerequisite.GroupType.Any : Prerequisite.GroupType.All;
+            return p;
+        }
+
+
+        public static NewMechanics.ReduceDRForFactOwner createReduceDRForFactOwner(int reduce_value, BlueprintFeature fact, params AttackType[] attack_types)
+        {
+            var r = Helpers.Create<NewMechanics.ReduceDRForFactOwner>();
+            r.Reduction = reduce_value;
+            r.CheckedFact = fact;
+            r.attack_types = attack_types;
+            return r;
         }
     }
 }

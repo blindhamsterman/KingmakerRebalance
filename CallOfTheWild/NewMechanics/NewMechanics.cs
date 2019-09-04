@@ -60,6 +60,9 @@ using Kingmaker.UnitLogic.Mechanics.Conditions;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Blueprints.Classes.Prerequisites;
 using Kingmaker.Designers.EventConditionActionSystem.ContextData;
+using Kingmaker.UnitLogic.Commands;
+using Kingmaker.Visual.Animation.Kingmaker;
+using Kingmaker.Blueprints.Area;
 
 namespace CallOfTheWild
 {
@@ -870,7 +873,7 @@ namespace CallOfTheWild
         [AllowedOn(typeof(BlueprintUnitFact))]
         public class ContextWeaponDamageDiceReplacement : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleCalculateWeaponStats>, IRulebookHandler<RuleCalculateWeaponStats>, IInitiatorRulebookSubscriber
         {
-            public BlueprintParametrizedFeature required_parametrized_feature;
+            public BlueprintParametrizedFeature[] required_parametrized_features;
             public DiceFormula[] dice_formulas;
             public ContextValue value;
 
@@ -885,11 +888,18 @@ namespace CallOfTheWild
 
             private bool checkFeature(WeaponCategory category)
             {
-                if (required_parametrized_feature == null)
+                if (required_parametrized_features.Empty())
                 {
                     return true;
                 }
-                return this.Owner.Progression.Features.Enumerable.Where<Kingmaker.UnitLogic.Feature>(p => p.Blueprint == required_parametrized_feature).Any(p => p.Param == category);
+                foreach (var f in required_parametrized_features)
+                {
+                    if( this.Owner.Progression.Features.Enumerable.Where<Kingmaker.UnitLogic.Feature>(p => p.Blueprint == f).Any(p => p.Param == category))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             public void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
@@ -1016,7 +1026,7 @@ namespace CallOfTheWild
         }
 
 
-        public class DeactivatedAbilityFromGroup : ContextAction
+        public class DeactivateAbilityFromGroup : ContextAction
         {
             public ActivatableAbilityGroup group;
             public int num_abilities_activated;
@@ -1024,7 +1034,7 @@ namespace CallOfTheWild
 
             public override string GetCaption()
             {
-                return $"Deactivated Ability From Group {group.ToString()} if more than {num_abilities_activated}.";
+                return $"Deactivate Ability From Group {group.ToString()} if more than {num_abilities_activated}.";
             }
 
             public override void RunAction()
@@ -1045,7 +1055,7 @@ namespace CallOfTheWild
                         }
                         else
                         {
-                            a.Deactivate();
+                            a.Stop();
                         }
                     }
 
@@ -1313,15 +1323,22 @@ namespace CallOfTheWild
 
         public class ActivatableAbilityMainWeaponHasParametrizedFeatureRestriction : ActivatableAbilityRestriction
         {
-            public BlueprintParametrizedFeature feature;
+            public BlueprintParametrizedFeature[] features;
 
             private bool checkFeature(WeaponCategory category)
             {
-                if (feature == null)
+                if (features.Empty())
                 {
                     return true;
                 }
-                return Owner.Progression.Features.Enumerable.Where<Kingmaker.UnitLogic.Feature>(p => p.Blueprint == feature).Any(p => p.Param == category);
+                foreach (var f in features)
+                {
+                    if (Owner.Progression.Features.Enumerable.Where<Kingmaker.UnitLogic.Feature>(p => p.Blueprint == f).Any(p => p.Param == category))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             public override bool IsAvailable()
@@ -2149,7 +2166,394 @@ namespace CallOfTheWild
         }
 
 
+        public class AddWeaponEnergyDamageDice : BuffLogic, IInitiatorRulebookHandler<RuleCalculateWeaponStats>, IRulebookHandler<RuleCalculateWeaponStats>, IInitiatorRulebookSubscriber
+        {
+            public ContextDiceValue dice_value;
+            public DamageEnergyType Element;
+            public AttackType[] range_types;
 
+            public void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
+            {
+                if (evt.Weapon == null && !this.range_types.Contains(evt.Weapon.Blueprint.AttackType))
+                    return;
+
+                DamageDescription damageDescription = new DamageDescription()
+                {
+                    TypeDescription = new DamageTypeDescription()
+                    {
+                        Type = DamageType.Energy,
+                        Energy = this.Element
+                    },
+                    Dice = new DiceFormula(this.dice_value.DiceCountValue.Calculate(this.Context), this.dice_value.DiceType),
+                    Bonus = this.dice_value.BonusValue.Calculate(this.Context)
+                };
+                evt.DamageDescription.Add(damageDescription);
+            }
+
+            public void OnEventDidTrigger(RuleCalculateWeaponStats evt)
+            {
+            }
+        }
+
+
+        public class AddWeaponEnergyDamageDiceIfHasFact : BuffLogic, IInitiatorRulebookHandler<RuleCalculateWeaponStats>, IRulebookHandler<RuleCalculateWeaponStats>, IInitiatorRulebookSubscriber
+        {
+            public ContextDiceValue dice_value;
+            public DamageEnergyType Element;
+            public AttackType[] range_types;
+            public BlueprintUnitFact checked_fact;
+
+            public void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
+            {
+                if (evt.Weapon == null && !this.range_types.Contains(evt.Weapon.Blueprint.AttackType) || !this.Owner.HasFact(checked_fact))
+                    return;
+
+                DamageDescription damageDescription = new DamageDescription()
+                {
+                    TypeDescription = new DamageTypeDescription()
+                    {
+                        Type = DamageType.Energy,
+                        Energy = this.Element
+                    },
+                    Dice = new DiceFormula(this.dice_value.DiceCountValue.Calculate(this.Context), this.dice_value.DiceType),
+                    Bonus = this.dice_value.BonusValue.Calculate(this.Context)
+                };
+                evt.DamageDescription.Add(damageDescription);
+            }
+
+            public void OnEventDidTrigger(RuleCalculateWeaponStats evt)
+            {
+            }
+        }
+
+
+        [ComponentName("Replace attack stat if has parametrized feature")]
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        public class AttackStatReplacementIfHasParametrizedFeature : RuleInitiatorLogicComponent<RuleCalculateAttackBonusWithoutTarget>
+        {
+            public StatType ReplacementStat;
+            public BlueprintParametrizedFeature feature;
+
+            public override void OnEventAboutToTrigger(RuleCalculateAttackBonusWithoutTarget evt)
+            {
+                ModifiableValueAttributeStat stat1 = this.Owner.Stats.GetStat(evt.AttackBonusStat) as ModifiableValueAttributeStat;
+                ModifiableValueAttributeStat stat2 = this.Owner.Stats.GetStat(this.ReplacementStat) as ModifiableValueAttributeStat;
+                bool flag = stat2 != null && stat1 != null && stat2.Bonus >= stat1.Bonus;
+
+                if (flag 
+                    && this.Owner.Progression.Features.Enumerable.Where<Kingmaker.UnitLogic.Feature>(p => p.Blueprint == feature).Any(p => p.Param == evt.Weapon.Blueprint.Category))
+                {
+                    evt.AttackBonusStat = this.ReplacementStat;
+                }   
+            }
+
+            public override void OnEventDidTrigger(RuleCalculateAttackBonusWithoutTarget evt)
+            {
+            }
+        }
+
+
+        [ComponentName("Replace attack stat for specific weapon")]
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        public class AttackStatReplacementForWeaponCategory : RuleInitiatorLogicComponent<RuleCalculateAttackBonusWithoutTarget>
+        {
+            public StatType ReplacementStat;
+            public WeaponCategory[] categories;
+
+            public override void OnEventAboutToTrigger(RuleCalculateAttackBonusWithoutTarget evt)
+            {
+                ModifiableValueAttributeStat stat1 = this.Owner.Stats.GetStat(evt.AttackBonusStat) as ModifiableValueAttributeStat;
+                ModifiableValueAttributeStat stat2 = this.Owner.Stats.GetStat(this.ReplacementStat) as ModifiableValueAttributeStat;
+                bool flag = stat2 != null && stat1 != null && stat2.Bonus >= stat1.Bonus;
+
+                if (flag && (categories.Contains(evt.Weapon.Blueprint.Category) || categories.Empty()))
+                {
+                    evt.AttackBonusStat = this.ReplacementStat;
+                }
+            }
+
+            public override void OnEventDidTrigger(RuleCalculateAttackBonusWithoutTarget evt)
+            {
+            }
+        }
+
+
+        [AllowMultipleComponents]
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        public class ContextACBonusAgainstFactOwner : OwnedGameLogicComponent<UnitDescriptor>, ITargetRulebookHandler<RuleAttackRoll>, IRulebookHandler<RuleAttackRoll>, ITargetRulebookSubscriber
+        {
+            public BlueprintUnitFact CheckedFact;
+            public ContextValue Bonus;
+            public ModifierDescriptor Descriptor;
+            public AlignmentComponent Alignment;
+
+            public void OnEventAboutToTrigger(RuleAttackRoll evt)
+            {
+                if (!evt.Initiator.Descriptor.HasFact(this.CheckedFact) || !evt.Initiator.Descriptor.Alignment.Value.HasComponent(this.Alignment))
+                    return;
+                int bonus = Bonus.Calculate(this.Fact.MaybeContext);
+                evt.AddTemporaryModifier(evt.Target.Stats.AC.AddModifier(bonus, (GameLogicComponent)this, this.Descriptor));
+            }
+
+            public void OnEventDidTrigger(RuleAttackRoll evt)
+            {
+            }
+        }
+
+
+        [AllowMultipleComponents]
+        [ComponentName("Saving throw bonus against fact")]
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        public class ContextSavingThrowBonusAgainstFact : RuleInitiatorLogicComponent<RuleSavingThrow>
+        {
+            public BlueprintFeature CheckedFact;
+            public ModifierDescriptor Descriptor;
+            public ContextValue Bonus;
+            public AlignmentComponent Alignment;
+
+            public override void OnEventAboutToTrigger(RuleSavingThrow evt)
+            {
+                UnitDescriptor descriptor = evt.Reason.Caster?.Descriptor;
+                if (descriptor == null || !descriptor.HasFact((BlueprintUnitFact)this.CheckedFact) || !descriptor.Alignment.Value.HasComponent(this.Alignment))
+                    return;
+                int bonus = Bonus.Calculate(this.Fact.MaybeContext);
+                evt.AddTemporaryModifier(evt.Initiator.Stats.SaveWill.AddModifier(bonus, (GameLogicComponent)this, this.Descriptor));
+                evt.AddTemporaryModifier(evt.Initiator.Stats.SaveReflex.AddModifier(bonus, (GameLogicComponent)this, this.Descriptor));
+                evt.AddTemporaryModifier(evt.Initiator.Stats.SaveFortitude.AddModifier(bonus, (GameLogicComponent)this, this.Descriptor));
+            }
+
+            public override void OnEventDidTrigger(RuleSavingThrow evt)
+            {
+            }
+        }
+
+
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        [AllowMultipleComponents]
+        public class AttackBonusOnAttacksOfOpportunity : RuleInitiatorLogicComponent<RuleAttackWithWeapon>
+        {
+            public ContextValue Value;
+            public ModifierDescriptor Descriptor;
+
+            public override void OnEventAboutToTrigger(RuleAttackWithWeapon evt)
+            {
+                if (!evt.IsAttackOfOpportunity)
+                    return;
+                evt.AddTemporaryModifier(evt.Target.Stats.AdditionalAttackBonus.AddModifier(this.Value.Calculate(this.Fact.MaybeContext), (GameLogicComponent)this, this.Descriptor));
+            }
+
+            public override void OnEventDidTrigger(RuleAttackWithWeapon evt)
+            {
+            }
+
+        }
+
+
+        [ComponentName("Maneuver Defence Bonus")]
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        public class ContextManeuverDefenceBonus : RuleTargetLogicComponent<RuleCalculateCMD>
+        {
+            public CombatManeuver Type;
+            public ContextValue Bonus;
+
+            public override void OnEventAboutToTrigger(RuleCalculateCMD evt)
+            {
+                if (evt.Type != this.Type && this.Type != CombatManeuver.None)
+                    return;
+                evt.AddBonus(this.Bonus.Calculate(this.Fact.MaybeContext), this.Fact);
+            }
+
+            public override void OnEventDidTrigger(RuleCalculateCMD evt)
+            {
+            }
+        }
+
+
+
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        [AllowMultipleComponents]
+        public class DoubleWeaponSize : RuleInitiatorLogicComponent<RuleCalculateWeaponStats>
+        {
+            public WeaponCategory[] categories;
+
+            public override void OnEventAboutToTrigger(RuleCalculateWeaponStats evt)
+            {
+                if (!categories.Empty() && !categories.Contains(evt.Weapon.Blueprint.Category))
+                {
+                    return;
+                }
+
+                evt.DoNotScaleDamage = true;
+                DiceFormula baseDice = !evt.WeaponDamageDiceOverride.HasValue ? evt.Weapon.Blueprint.BaseDamage : evt.WeaponDamageDiceOverride.Value;
+                var wielder_size = evt.Initiator.Descriptor.State.Size;
+
+                if (wielder_size == Size.Colossal || wielder_size == Size.Gargantuan)
+                {
+                    //double damage dice
+                    DiceFormula double_damage = new DiceFormula(2* baseDice.Rolls, baseDice.Dice);
+                    evt.WeaponDamageDiceOverride = new DiceFormula? (double_damage);
+                }
+                else
+                {
+                    evt.WeaponDamageDiceOverride = new DiceFormula?(WeaponDamageScaleTable.Scale(baseDice, wielder_size + 2, Size.Medium, evt.Weapon.Blueprint));
+                }
+            }
+
+            public override void OnEventDidTrigger(RuleCalculateWeaponStats evt)
+            {
+            }
+        }
+
+
+        public class ContextActionAttack : ContextAction
+        {
+            public override string GetCaption()
+            {
+                return string.Format("Caster attack");
+            }
+
+            public override void RunAction()
+            {
+                UnitEntityData maybeCaster = this.Context.MaybeCaster;
+                if (maybeCaster == null)
+                {
+                    UberDebug.LogError((object)"Caster is missing", (object[])Array.Empty<object>());
+                }
+                else
+                {
+                    var target = this.Target;
+                    if (target == null)
+                        return;
+                   // UnitAttack attack = new UnitAttack(this.Target.Unit);
+                   // attack.IgnoreCooldown(null);
+                   // maybeCaster.Commands.AddToQueueFirst(attack);
+
+                    RuleAttackWithWeapon attackWithWeapon = new RuleAttackWithWeapon(maybeCaster, target.Unit, maybeCaster.Body.PrimaryHand.MaybeWeapon, 0);
+                    attackWithWeapon.Reason = (RuleReason)this.Context;
+                    RuleAttackWithWeapon rule = attackWithWeapon;
+                    this.Context.TriggerRule<RuleAttackWithWeapon>(rule);
+                }
+            }
+        }
+
+
+        public class AttackAnimation : BlueprintComponent, IAbilityCustomAnimation
+        {
+            public UnitAnimationAction GetAbilityAction(UnitEntityData caster)
+            {
+                Main.logger.Log("here " + $"{ caster.Descriptor.Unit.View.AnimationManager.CreateHandle(UnitAnimationType.MainHandAttack).Action != null}");
+                return caster.Descriptor.Unit.View.AnimationManager.CreateHandle(UnitAnimationType.MainHandAttack).Action;
+            }
+        }
+
+
+        [ComponentName("Reduces DR against fact owner")]
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        public class ReduceDRForFactOwner : RuleTargetLogicComponent<RuleCalculateDamage>
+        {
+            public int Reduction;
+            public BlueprintFeature CheckedFact;
+            public AttackType[] attack_types;
+
+            public override void OnEventAboutToTrigger(RuleCalculateDamage evt)
+            {
+                if (evt.DamageBundle.Weapon == null || evt.DamageBundle.WeaponDamage == null || evt.Initiator != this.Owner.Unit 
+                    || !evt.Initiator.Descriptor.HasFact(CheckedFact) || !attack_types.Contains(evt.DamageBundle.Weapon.Blueprint.AttackType))
+                    return;
+
+                evt.DamageBundle.WeaponDamage.SetReductionPenalty(this.Reduction);
+            }
+
+            public override void OnEventDidTrigger(RuleCalculateDamage evt)
+            {
+            }
+        }
+
+
+        [AllowedOn(typeof(BlueprintUnitFact))]
+        [AllowMultipleComponents]
+        public class FavoredTerrainBonus : BuffLogic, IAreaLoadingStagesHandler, IGlobalSubscriber
+        {
+            public LootSetting[] Settings;
+            private ModifiableValue.Modifier m_InitiativeModifier;
+            private ModifiableValue.Modifier m_PerceptionModifier;
+            private ModifiableValue.Modifier m_StealthModifier;
+            private ModifiableValue.Modifier m_LoreNatureModifier;
+            public ContextValue Value;
+
+            public override void OnTurnOn()
+            {
+                base.OnTurnOn();
+                this.CheckSettings();
+                this.Owner.Ensure<UnitPartFavoredTerrain>().AddEntry(this.Settings, this.Fact);
+            }
+
+            public override void OnTurnOff()
+            {
+                base.OnTurnOff();
+                this.DeactivateModifier();
+                this.Owner.Ensure<UnitPartFavoredTerrain>().RemoveEntry(this.Fact);
+            }
+
+            public void CheckSettings()
+            {
+                BlueprintArea currentlyLoadedArea = Game.Instance.CurrentlyLoadedArea;
+                if (currentlyLoadedArea != null && ((IEnumerable<LootSetting>)this.Settings).Contains<LootSetting>(currentlyLoadedArea.LootSetting))
+                    this.ActivateModifier();
+                else
+                    this.DeactivateModifier();
+            }
+
+            public void ActivateModifier()
+            {
+                int value = Value.Calculate(this.Fact.MaybeContext);
+                if (this.m_InitiativeModifier == null)
+                    this.m_InitiativeModifier = this.Owner.Stats.Initiative.AddModifier(value, (GameLogicComponent)this, ModifierDescriptor.None);
+                if (this.m_PerceptionModifier == null)
+                    this.m_PerceptionModifier = this.Owner.Stats.SkillPerception.AddModifier(value, (GameLogicComponent)this, ModifierDescriptor.None);
+                if (this.m_StealthModifier == null)
+                    this.m_StealthModifier = this.Owner.Stats.SkillStealth.AddModifier(value, (GameLogicComponent)this, ModifierDescriptor.None);
+                if (this.m_LoreNatureModifier != null)
+                    return;
+                this.m_LoreNatureModifier = this.Owner.Stats.SkillLoreNature.AddModifier(value, (GameLogicComponent)this, ModifierDescriptor.None);
+            }
+
+            public void DeactivateModifier()
+            {
+                if (this.m_InitiativeModifier != null)
+                {
+                    if (this.m_InitiativeModifier != null)
+                        this.m_InitiativeModifier.Remove();
+                    this.m_InitiativeModifier = (ModifiableValue.Modifier)null;
+                }
+                if (this.m_PerceptionModifier != null)
+                {
+                    if (this.m_PerceptionModifier != null)
+                        this.m_PerceptionModifier.Remove();
+                    this.m_PerceptionModifier = (ModifiableValue.Modifier)null;
+                }
+                if (this.m_StealthModifier != null)
+                {
+                    if (this.m_StealthModifier != null)
+                        this.m_StealthModifier.Remove();
+                    this.m_StealthModifier = (ModifiableValue.Modifier)null;
+                }
+                if (this.m_LoreNatureModifier == null)
+                    return;
+                if (this.m_LoreNatureModifier != null)
+                    this.m_LoreNatureModifier.Remove();
+                this.m_LoreNatureModifier = (ModifiableValue.Modifier)null;
+            }
+
+            public void OnAreaScenesLoaded()
+            {
+            }
+
+            public void OnAreaLoadingComplete()
+            {
+                this.CheckSettings();
+            }
+        }
     }
 
 }

@@ -28,6 +28,10 @@ New feats:
 - Skald's Vigor and Greater Skald's Vigor,
 - Stalwart and Improved Stalwart,
 - Quick Channel,
+- Channel Smite,
+- Deadeye's Blessing,
+- Guided Hand,
+- Planar Focus,
 - Bonded Mind and Share Spell.
 
 New rage powers:

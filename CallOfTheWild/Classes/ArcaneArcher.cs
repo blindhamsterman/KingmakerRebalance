@@ -417,12 +417,7 @@ namespace CallOfTheWild
 
             var seekerArrowAction = Helpers.CreateRunActions(Common.createContextActionApplyBuff(
                 seekerArrowBuff, Helpers.CreateContextDuration(Common.createSimpleContextValue(1), DurationRate.Rounds),
-                is_permanent: false, dispellable: false));
-
-            // var hit_action = Helpers.CreateActionList(Helpers.Create<SpellManipulationMechanics.ReleaseSpellStoredInSpecifiedBuff>(r => r.fact = seeker_arrow));
-            // var miss_action = Helpers.CreateActionList(Helpers.Create<SpellManipulationMechanics.ClearSpellStoredInSpecifiedBuff>(r => r.fact = seeker_arrow));
-            var action = Helpers.Create<AbilityExecuteActionOnCast>();
-            action.Actions = Helpers.CreateActionList(Common.createContextActionAttack());
+                is_permanent: false, dispellable: false), Common.createContextActionAttack());
 
             var seeker_arrow_ability = Helpers.CreateAbility($"SeekerArrowAbility",
                                              seeker_arrow.Name,
@@ -435,9 +430,10 @@ namespace CallOfTheWild
                                              "",
                                              "",
                                              Helpers.Create<NewMechanics.AttackAnimation>(),
-                                             action,
+                                             seekerArrowAction,
                                              Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
                                              Helpers.CreateResourceLogic(seeker_arrow_resource));
+            seeker_arrow_ability.setMiscAbilityParametersSingleTargetRangedHarmful(works_on_allies: true);
             seeker_arrow_ability.NeedEquipWeapons = true;
             seeker_arrow.AddComponent(Helpers.CreateAddFacts(seeker_arrow_ability));
         }
@@ -643,6 +639,7 @@ namespace CallOfTheWild
 
         public void OnEventAboutToTrigger(RuleAttackRoll evt)
         {
+            Log.Write("TEST");
             evt.IgnoreConcealment = true;
         }
 

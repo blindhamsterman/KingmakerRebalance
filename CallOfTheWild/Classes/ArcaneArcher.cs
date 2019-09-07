@@ -165,7 +165,7 @@ namespace CallOfTheWild
             CreateEnhanceArrowsBurst();
             // CreateHailOfArrows(allowed_weapons);
             CreateEnhanceArrowsAligned(allowed_weapons);
-            // CreateArrowOfDeath(allowed_weapons);
+            CreateArrowOfDeath(allowed_weapons);
 
             arcane_archer_progression = Helpers.CreateProgression("ArcaneArcherProgression",
                             arcanearcher.Name,
@@ -185,13 +185,14 @@ namespace CallOfTheWild
                 Helpers.LevelEntry(7, enhance_arrows_burst),
                 Helpers.LevelEntry(8), //, hail_of_arrows
                 Helpers.LevelEntry(9, enhance_arrows_aligned),
-                Helpers.LevelEntry(10) //, arrow_of_death
+                Helpers.LevelEntry(10, arrow_of_death) 
             };
 
             arcane_archer_progression.UIDeterminatorsGroup = new BlueprintFeatureBase[] { arcane_archer_proficiencies };
             arcane_archer_progression.UIGroups = new UIGroup[]  {Helpers.CreateUIGroup(arcane_archer_feat),
                                                          Helpers.CreateUIGroup(seeker_arrow),
-                                                         Helpers.CreateUIGroup(phase_arrow), //phase_arrow, hail_of_arrows, arrow_of_death
+                                                         Helpers.CreateUIGroup(phase_arrow),
+                                                         Helpers.CreateUIGroup(arrow_of_death),  //hail_of_arrows
                                                          Helpers.CreateUIGroup(enhance_arrows_magic, enhance_arrows_elememtal, enhance_arrows_burst, enhance_arrows_aligned),
                                                          Helpers.CreateUIGroup(aracane_archer_spellcasting, Hinterlander.imbue_arrow)
                                                         };
@@ -493,11 +494,17 @@ namespace CallOfTheWild
         }
         static void CreateArrowOfDeath(BlueprintWeaponType[] allowed_weapons)
         {
-            /* TODO: At 10th level, an arcane archer can create a special type of slaying arrow that forces the target, if damaged by the arrow’s 
-            attack, to make a Fortitude save or be slain immediately. The DC of this save is equal to 20 + the arcane archer’s Charisma modifier. 
-            It takes 1 day to make a slaying arrow, and the arrow only functions for the arcane archer who created it. The slaying arrow lasts no 
-            longer than 1 year, and the archer can only have one such arrow in existence at a time.*/
-
+            var arrow_of_death_resource = Helpers.CreateAbilityResource("ArrowOfDeathArrowResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
+            arrow_of_death_resource.SetFixedResource(1);
+            arrow_of_death = Helpers.CreateFeature("ArcaneArcherArrowOfDeath", "Arrow of Death",
+            $"At 10th level, an arcane archer can create a special type of slaying arrow that forces the target, if damaged by the arrow’s " +
+            "attack, to make a Fortitude save or be slain immediately. The DC of this save is equal to 20 + the arcane archer’s Charisma modifier. " +
+            "It takes 1 day to make a slaying arrow, and the arrow only functions for the arcane archer who created it. The slaying arrow lasts no " + 
+            "longer than 1 year, and the archer can only have one such arrow in existence at a time.",
+            "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+            FeatureGroup.None,
+            Helpers.CreateAddAbilityResource(arrow_of_death_resource));
         }
     }
 
@@ -664,7 +671,6 @@ namespace CallOfTheWild
         public void OnEventDidTrigger(RuleDealDamage evt) { }
     }
 
-
     public class SeekerArrow : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleAttackRoll>
     {
 
@@ -694,6 +700,27 @@ namespace CallOfTheWild
         {
             evt.Initiator.Buffs.GetBuff(library.Get<BlueprintBuff>("34b6fd7492414f3ab1442f6b3fb17803")).Remove();
         }
+    }
+
+    
+    public class ArrowOfDeath : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleDealDamage>
+    {
+        public BlueprintWeaponType[] weapon_types;
+        static LibraryScriptableObject library => Main.library;
+    
+
+        public void OnEventAboutToTrigger(RuleDealDamage evt)
+        {
+            var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
+            if (!Array.Exists(weapon_types, t => t == weapon.Blueprint.Type))
+            {
+                return;
+            }
+            
+        }
+
+        public void OnEventDidTrigger(RuleDealDamage evt) { }
+
     }
 
 

@@ -21,7 +21,7 @@ using Kingmaker.UnitLogic;
 using System.Collections.Generic;
 using Kingmaker.RuleSystem.Rules.Damage;
 using Kingmaker.UnitLogic.Mechanics;
-using Kingmaker.UnitLogic.Abilities.Components;
+using Kingmaker.UnitLogic.Mechanics.Components;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Mechanics.Actions;
@@ -193,7 +193,7 @@ namespace CallOfTheWild
                                                          Helpers.CreateUIGroup(seeker_arrow),
                                                          Helpers.CreateUIGroup(phase_arrow),
                                                          Helpers.CreateUIGroup(hail_of_arrows),
-                                                         Helpers.CreateUIGroup(arrow_of_death), 
+                                                         Helpers.CreateUIGroup(arrow_of_death),
                                                          Helpers.CreateUIGroup(enhance_arrows_magic, enhance_arrows_elememtal, enhance_arrows_burst, enhance_arrows_aligned),
                                                          Helpers.CreateUIGroup(aracane_archer_spellcasting, Hinterlander.imbue_arrow)
                                                         };
@@ -519,9 +519,13 @@ namespace CallOfTheWild
             Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
             FeatureGroup.None,
             Helpers.CreateAddAbilityResource(arrow_of_death_resource));
-            var save_action = Helpers.CreateConditionalSaved(new Kingmaker.ElementsSystem.GameAction[0], new Kingmaker.ElementsSystem.GameAction[] { Helpers.Create<ContextActionKillTarget>() });
-            var action = Helpers.CreateRunActions(Common.createContextActionAttack(), Common.createContextActionSavingThrow(SavingThrowType.Fortitude, Helpers.CreateActionList(save_action)));
+            var save_condition = Helpers.CreateConditionalSaved(new Kingmaker.ElementsSystem.GameAction[0], new Kingmaker.ElementsSystem.GameAction[] { Helpers.Create<ContextActionKillTarget>() });
+            var save_action = Helpers.CreateActionList(Common.createContextActionSavingThrow(SavingThrowType.Fortitude, Helpers.CreateActionList(save_condition)));
+            var action = Helpers.CreateRunActions(Common.createContextActionAttack(save_action));
 
+            var save_dc = Helpers.Create<ContextCalculateAbilityParams>();
+            save_dc.CasterLevel = 20;
+            save_dc.StatType = StatType.Charisma;
             var arrow_of_death_ability = Helpers.CreateAbility($"ArrowOfDeathAbility",
                                             arrow_of_death.Name,
                                             arrow_of_death.Description,
@@ -535,7 +539,7 @@ namespace CallOfTheWild
                                             Helpers.Create<NewMechanics.AttackAnimation>(),
                                             action,
                                             Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
-                                            Common.createContextCalculateAbilityParamsBasedOnClass(character_class: arcanearcher, stat: StatType.Charisma),
+                                            save_dc,
                                             Helpers.CreateResourceLogic(arrow_of_death_resource));
 
             arrow_of_death_ability.setMiscAbilityParametersSingleTargetRangedHarmful(works_on_allies: false);

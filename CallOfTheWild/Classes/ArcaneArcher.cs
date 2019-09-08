@@ -21,6 +21,7 @@ using Kingmaker.UnitLogic;
 using System.Collections.Generic;
 using Kingmaker.RuleSystem.Rules.Damage;
 using Kingmaker.UnitLogic.Mechanics;
+using Kingmaker.UnitLogic.Abilities.Components;
 using Kingmaker.UnitLogic.Mechanics.Components;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.ActivatableAbilities;
@@ -497,7 +498,7 @@ namespace CallOfTheWild
         {
             hail_of_arrows_resource = Helpers.CreateAbilityResource("HailofArrowsResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
             hail_of_arrows_resource.SetFixedResource(1);
-            arrow_of_death = Helpers.CreateFeature("ArcaneArcherHailofArrows", "Hail of Arrows",
+            hail_of_arrows = Helpers.CreateFeature("ArcaneArcherHailofArrows", "Hail of Arrows",
             $"In lieu of his regular attacks, once per day an arcane archer of 8th level or higher can fire an arrow at each and every " +
             "target within range, to a maximum of one target for every arcane archer level she has earned. Each attack uses the archer’s primary " +
             "attack bonus, and each enemy may only be targeted by a single arrow",
@@ -505,6 +506,25 @@ namespace CallOfTheWild
             Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
             FeatureGroup.None,
             Helpers.CreateAddAbilityResource(hail_of_arrows_resource));
+            var hail_of_arrows_ability = Helpers.CreateAbility($"HailOfArrowsAbility",
+                                            hail_of_arrows.Name,
+                                            hail_of_arrows.Description,
+                                            "",
+                                            hail_of_arrows.Icon,
+                                            AbilityType.Supernatural,
+                                            CommandType.Standard,
+                                            AbilityRange.Weapon,
+                                            "",
+                                            "",
+                                            Helpers.Create<NewMechanics.AttackAnimation>(),
+                                            Helpers.CreateRunActions(Common.createContextActionAttack()),
+                                            Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
+                                            Helpers.CreateAbilityTargetsAround(50.Feet(), TargetType.Enemy),
+                                            Helpers.CreateResourceLogic(hail_of_arrows_resource));
+
+            hail_of_arrows_ability.NeedEquipWeapons = true;
+            hail_of_arrows.AddComponent(Helpers.CreateAddFacts(hail_of_arrows_ability));
+
         }
         static void CreateArrowOfDeath(BlueprintWeaponType[] allowed_weapons)
         {
@@ -532,7 +552,7 @@ namespace CallOfTheWild
                                             "",
                                             arrow_of_death.Icon,
                                             AbilityType.Supernatural,
-                                            CommandType.Standard,
+                                            CommandType.Swift,
                                             AbilityRange.Weapon,
                                             "",
                                             "",

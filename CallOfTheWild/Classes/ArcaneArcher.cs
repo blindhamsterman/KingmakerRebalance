@@ -185,7 +185,7 @@ namespace CallOfTheWild
                 Helpers.LevelEntry(7, enhance_arrows_burst),
                 Helpers.LevelEntry(8), //, hail_of_arrows
                 Helpers.LevelEntry(9, enhance_arrows_aligned),
-                Helpers.LevelEntry(10, arrow_of_death) 
+                Helpers.LevelEntry(10, arrow_of_death)
             };
 
             arcane_archer_progression.UIDeterminatorsGroup = new BlueprintFeatureBase[] { arcane_archer_proficiencies };
@@ -420,8 +420,11 @@ namespace CallOfTheWild
                Helpers.Create<SeekerArrow>());
 
             var apply_caster_buff = Common.createContextActionApplyBuff(seekerArrowBuff, Helpers.CreateContextDuration(Common.createSimpleContextValue(1), DurationRate.Rounds), dispellable: false);
-            var seekerArrowAction = Helpers.CreateRunActions(Helpers.Create<ContextActionOnContextCaster>(c => c.Actions = Helpers.CreateActionList(apply_caster_buff)), Common.createContextActionAttack());
+            var apply_buff_action = Helpers.CreateRunActions(Helpers.Create<ContextActionOnContextCaster>(c => c.Actions = Helpers.CreateActionList(apply_caster_buff)), Common.createContextActionAttack());
 
+            var remove_caster_buff = Common.createContextActionRemoveBuff(seekerArrowBuff);
+            var remove_buff_action = Common.createAddInitiatorAttackWithWeaponTrigger(Helpers.CreateActionList(remove_caster_buff), only_hit: false, wait_for_attack_to_resolve: true, on_initiator: true);
+            seekerArrowBuff.AddComponent(remove_buff_action);
             var seeker_arrow_ability = Helpers.CreateAbility($"SeekerArrowAbility",
                                             seeker_arrow.Name,
                                             seeker_arrow.Description,
@@ -433,7 +436,7 @@ namespace CallOfTheWild
                                             "",
                                             "",
                                             Helpers.Create<NewMechanics.AttackAnimation>(),
-                                            seekerArrowAction,
+                                            apply_buff_action,
                                             Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
                                             Helpers.CreateResourceLogic(seeker_arrow_resource)
                                                      );
@@ -463,7 +466,11 @@ namespace CallOfTheWild
                Helpers.Create<PhaseArrow>());
 
             var apply_caster_buff = Common.createContextActionApplyBuff(phaseArrowBuff, Helpers.CreateContextDuration(Common.createSimpleContextValue(1), DurationRate.Rounds), dispellable: false);
-            var phaseArrowAction = Helpers.CreateRunActions(Helpers.Create<ContextActionOnContextCaster>(c => c.Actions = Helpers.CreateActionList(apply_caster_buff)), Common.createContextActionAttack());
+            var apply_buff_action = Helpers.CreateRunActions(Helpers.Create<ContextActionOnContextCaster>(c => c.Actions = Helpers.CreateActionList(apply_caster_buff)), Common.createContextActionAttack());
+
+            var remove_caster_buff = Common.createContextActionRemoveBuff(phaseArrowBuff);
+            var remove_buff_action = Common.createAddInitiatorAttackWithWeaponTrigger(Helpers.CreateActionList(remove_caster_buff), only_hit: false, wait_for_attack_to_resolve: true, on_initiator: true);
+            phaseArrowBuff.AddComponent(remove_buff_action);
 
             var phase_arrow_ability = Helpers.CreateAbility($"PhaseArrowAbility",
                                             phase_arrow.Name,
@@ -476,7 +483,7 @@ namespace CallOfTheWild
                                             "",
                                             "",
                                             Helpers.Create<NewMechanics.AttackAnimation>(),
-                                            phaseArrowAction,
+                                            apply_buff_action,
                                             Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
                                             Helpers.CreateResourceLogic(phase_arrow_resource)
                                                      );
@@ -495,16 +502,51 @@ namespace CallOfTheWild
         static void CreateArrowOfDeath(BlueprintWeaponType[] allowed_weapons)
         {
             var arrow_of_death_resource = Helpers.CreateAbilityResource("ArrowOfDeathArrowResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
-            arrow_of_death_resource.SetFixedResource(1);
-            arrow_of_death = Helpers.CreateFeature("ArcaneArcherArrowOfDeath", "Arrow of Death",
-            $"At 10th level, an arcane archer can create a special type of slaying arrow that forces the target, if damaged by the arrow’s " +
-            "attack, to make a Fortitude save or be slain immediately. The DC of this save is equal to 20 + the arcane archer’s Charisma modifier. " +
-            "It takes 1 day to make a slaying arrow, and the arrow only functions for the arcane archer who created it. The slaying arrow lasts no " + 
-            "longer than 1 year, and the archer can only have one such arrow in existence at a time.",
-            "",
-            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
-            FeatureGroup.None,
-            Helpers.CreateAddAbilityResource(arrow_of_death_resource));
+                                            arrow_of_death_resource.SetFixedResource(1);
+                                            arrow_of_death = Helpers.CreateFeature("ArcaneArcherArrowOfDeath", "Arrow of Death",
+                                            $"At 10th level, an arcane archer can create a special type of slaying arrow that forces the target, if damaged by the arrow’s " +
+                                            "attack, to make a Fortitude save or be slain immediately. The DC of this save is equal to 20 + the arcane archer’s Charisma modifier. " +
+                                            "It takes 1 day to make a slaying arrow, and the arrow only functions for the arcane archer who created it. The slaying arrow lasts no " +
+                                            "longer than 1 year, and the archer can only have one such arrow in existence at a time.",
+                                            "",
+                                            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+                                            FeatureGroup.None,
+                                            Helpers.CreateAddAbilityResource(arrow_of_death_resource));
+
+            var arrow_of_death_buff = Helpers.CreateBuff(arrow_of_death.name + "Buff", "Arrow of Death",
+                                            $"A target hit by this arrow must pass a Fortitude save or die, the DC for this save is 20 + your Charisma bonus.", "",
+                                            library.Get<BlueprintAbility>("2c38da66e5a599347ac95b3294acbe00").Icon, null);
+
+            var arrow_of_death_action = Common.createContextActionApplyBuff(arrow_of_death_buff, 
+                Helpers.CreateContextDuration(Common.createSimpleContextValue(1), DurationRate.Rounds), dispellable: false);
+        
+            var save_action = Helpers.CreateConditionalSaved(new Kingmaker.ElementsSystem.GameAction[0], new Kingmaker.ElementsSystem.GameAction[] { arrow_of_death_action });
+            var action = Helpers.CreateActionList(Common.createContextActionSavingThrow(SavingThrowType.Fortitude, Helpers.CreateActionList(save_action)));
+
+            var kill_target = Helpers.CreateAddFactContextActions(save_action);
+            kill_target.Activated.Actions.AddToArray(Helpers.Create<ContextActionKillTarget>());
+            arrow_of_death_buff.AddComponent(kill_target);
+            
+            var arrow_of_death_ability = Helpers.CreateAbility($"ArrowOfDeathAbility",
+                                            arrow_of_death.Name,
+                                            arrow_of_death.Description,
+                                            "",
+                                            arrow_of_death.Icon,
+                                            AbilityType.Supernatural,
+                                            CommandType.Standard,
+                                            AbilityRange.Weapon,
+                                            "",
+                                            "",
+                                            Helpers.Create<NewMechanics.AttackAnimation>(),
+                                            Common.createAddInitiatorAttackWithWeaponTrigger(action, check_weapon_range_type: true, range_type: AttackTypeAttackBonus.WeaponRangeType.Ranged),
+                                            Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
+                                            Common.createContextCalculateAbilityParamsBasedOnClass(character_class: arcanearcher, stat: StatType.Charisma),
+                                            Helpers.CreateResourceLogic(arrow_of_death_resource)
+                                                     );
+
+            arrow_of_death_ability.setMiscAbilityParametersSingleTargetRangedHarmful(works_on_allies: false);
+            arrow_of_death_ability.NeedEquipWeapons = true;
+            arrow_of_death.AddComponent(Helpers.CreateAddFacts(arrow_of_death_ability));
         }
     }
 
@@ -682,7 +724,6 @@ namespace CallOfTheWild
 
         public void OnEventDidTrigger(RuleAttackRoll evt)
         {
-            evt.Initiator.Buffs.GetBuff(library.Get<BlueprintBuff>("4e5a9fbf27ab4785a9ad1a760048e42a")).Remove();
         }
     }
 
@@ -698,32 +739,8 @@ namespace CallOfTheWild
 
         public void OnEventDidTrigger(RuleAttackRoll evt)
         {
-            evt.Initiator.Buffs.GetBuff(library.Get<BlueprintBuff>("34b6fd7492414f3ab1442f6b3fb17803")).Remove();
         }
     }
-
-    
-    public class ArrowOfDeath : OwnedGameLogicComponent<UnitDescriptor>, IInitiatorRulebookHandler<RuleDealDamage>
-    {
-        public BlueprintWeaponType[] weapon_types;
-        static LibraryScriptableObject library => Main.library;
-    
-
-        public void OnEventAboutToTrigger(RuleDealDamage evt)
-        {
-            var weapon = Owner.Body.PrimaryHand.HasWeapon ? Owner.Body.PrimaryHand.MaybeWeapon : Owner.Body.EmptyHandWeapon;
-            if (!Array.Exists(weapon_types, t => t == weapon.Blueprint.Type))
-            {
-                return;
-            }
-            
-        }
-
-        public void OnEventDidTrigger(RuleDealDamage evt) { }
-
-    }
-
-
 
 }
 

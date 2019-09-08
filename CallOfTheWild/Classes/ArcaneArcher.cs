@@ -521,7 +521,7 @@ namespace CallOfTheWild
                 Helpers.CreateContextDuration(Common.createSimpleContextValue(1), DurationRate.Rounds), dispellable: false);
         
             var save_action = Helpers.CreateConditionalSaved(new Kingmaker.ElementsSystem.GameAction[0], new Kingmaker.ElementsSystem.GameAction[] { arrow_of_death_action });
-            var action = Helpers.CreateActionList(Common.createContextActionAttack(), Common.createContextActionSavingThrow(SavingThrowType.Fortitude, Helpers.CreateActionList(save_action)));
+            var action = Helpers.CreateRunActions(Common.createContextActionAttack(), Common.createContextActionSavingThrow(SavingThrowType.Fortitude, Helpers.CreateActionList(save_action)));
 
             var kill_target = Helpers.CreateAddFactContextActions(save_action);
             kill_target.Activated.Actions.AddToArray(Helpers.Create<ContextActionKillTarget>());
@@ -538,7 +538,7 @@ namespace CallOfTheWild
                                             "",
                                             "",
                                             Helpers.Create<NewMechanics.AttackAnimation>(),
-                                            Common.createAddInitiatorAttackWithWeaponTrigger(action, check_weapon_range_type: true, range_type: AttackTypeAttackBonus.WeaponRangeType.Ranged),
+                                            action,
                                             Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
                                             Common.createContextCalculateAbilityParamsBasedOnClass(character_class: arcanearcher, stat: StatType.Charisma),
                                             Helpers.CreateResourceLogic(arrow_of_death_resource)

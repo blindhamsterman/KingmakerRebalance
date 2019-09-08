@@ -519,7 +519,7 @@ namespace CallOfTheWild
             var inflict_light_wounds = ResourcesLibrary.TryGetBlueprint<Kingmaker.UnitLogic.Abilities.Blueprints.BlueprintAbility>("e5cb4c4459e437e49a4cd73fde6b9063");
             var feat = CallOfTheWild.Helpers.CreateFeature("FeykillerAnimalFocusFeature",
                                                             "Feykiller Animal Focus",
-                                                            "A feykiller emulates animals that grant her the ability to unmask fey trickery. She adds crow, goat, shark and turtle to her animal focus ability instead of the bear, frog, monkey and mouse choices.",
+                                                            "A feykiller emulates animals that grant her the ability to unmask fey trickery. She adds crow, goat, shark, moongoose and turtle to her animal focus ability instead of the bear, frog, monkey, mouse and snake choices.",
                                                             "0c7d1530b6e6464793add007315337c9",
                                                             inflict_light_wounds.Icon,
                                                             FeatureGroup.None,
@@ -688,6 +688,8 @@ namespace CallOfTheWild
 
             var animal_domain = library.Get<BlueprintProgression>("23d2f87aa54c89f418e68e790dba11e0");
             animal_domain.AddComponent(Common.prerequisiteNoArchetype(hunter_class, divine_hunter_archetype));
+
+            divine_hunter_archetype.AddComponent(Helpers.PrerequisiteNoFeature(library.Get<BlueprintFeature>("92c0d2da0a836ce418a267093c09ca54")));//no atheism
         }
 
 

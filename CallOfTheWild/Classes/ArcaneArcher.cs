@@ -56,7 +56,7 @@ namespace CallOfTheWild
         static internal BlueprintFeature hail_of_arrows;
         static internal BlueprintAbilityResource hail_of_arrows_resource;
         static internal BlueprintFeature arrow_of_death;
-
+        static internal BlueprintAbilityResource arrow_of_death_resource;
         static internal BlueprintFeature arcane_archer_proficiencies;
 
         static internal ActivatableAbilityGroup enhance_arrows_elemental_group = ActivatableAbilityGroupExtension.EnhanceArrowsElemental.ToActivatableAbilityGroup();//ActivatableAbilityGroup.TrueMagus;
@@ -163,7 +163,7 @@ namespace CallOfTheWild
             CreateArcheryFeatSelection();
             CreatePhaseArrow(allowed_weapons);
             CreateEnhanceArrowsBurst();
-            // CreateHailOfArrows(allowed_weapons);
+            CreateHailOfArrows(allowed_weapons);
             CreateEnhanceArrowsAligned(allowed_weapons);
             CreateArrowOfDeath(allowed_weapons);
 
@@ -183,7 +183,7 @@ namespace CallOfTheWild
                 Helpers.LevelEntry(5, arcane_archer_feat), // Distant arrows aren't possible, providing a feat for this level seems reasonable seeing as the class also doesn't get spellcasting here.
                 Helpers.LevelEntry(6, phase_arrow),
                 Helpers.LevelEntry(7, enhance_arrows_burst),
-                Helpers.LevelEntry(8), //, hail_of_arrows
+                Helpers.LevelEntry(8, hail_of_arrows),
                 Helpers.LevelEntry(9, enhance_arrows_aligned),
                 Helpers.LevelEntry(10, arrow_of_death)
             };
@@ -192,7 +192,8 @@ namespace CallOfTheWild
             arcane_archer_progression.UIGroups = new UIGroup[]  {Helpers.CreateUIGroup(arcane_archer_feat),
                                                          Helpers.CreateUIGroup(seeker_arrow),
                                                          Helpers.CreateUIGroup(phase_arrow),
-                                                         Helpers.CreateUIGroup(arrow_of_death),  //hail_of_arrows
+                                                         Helpers.CreateUIGroup(hail_of_arrows),
+                                                         Helpers.CreateUIGroup(arrow_of_death), 
                                                          Helpers.CreateUIGroup(enhance_arrows_magic, enhance_arrows_elememtal, enhance_arrows_burst, enhance_arrows_aligned),
                                                          Helpers.CreateUIGroup(aracane_archer_spellcasting, Hinterlander.imbue_arrow)
                                                         };
@@ -494,39 +495,33 @@ namespace CallOfTheWild
         }
         static void CreateHailOfArrows(BlueprintWeaponType[] allowed_weapons)
         {
-            /* TODO: In lieu of his regular attacks, once per day an arcane archer of 8th level or higher can fire an arrow at each and every 
-            target within range, to a maximum of one target for every arcane archer level she has earned. Each attack uses the archer’s primary 
-            attack bonus, and each enemy may only be targeted by a single arrow
-            */
+            hail_of_arrows_resource = Helpers.CreateAbilityResource("HailofArrowsResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
+            hail_of_arrows_resource.SetFixedResource(1);
+            arrow_of_death = Helpers.CreateFeature("ArcaneArcherHailofArrows", "Hail of Arrows",
+            $"In lieu of his regular attacks, once per day an arcane archer of 8th level or higher can fire an arrow at each and every " +
+            "target within range, to a maximum of one target for every arcane archer level she has earned. Each attack uses the archer’s primary " +
+            "attack bonus, and each enemy may only be targeted by a single arrow",
+            "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+            FeatureGroup.None,
+            Helpers.CreateAddAbilityResource(hail_of_arrows_resource));
         }
         static void CreateArrowOfDeath(BlueprintWeaponType[] allowed_weapons)
         {
-            var arrow_of_death_resource = Helpers.CreateAbilityResource("ArrowOfDeathArrowResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
-                                            arrow_of_death_resource.SetFixedResource(1);
-                                            arrow_of_death = Helpers.CreateFeature("ArcaneArcherArrowOfDeath", "Arrow of Death",
-                                            $"At 10th level, an arcane archer can create a special type of slaying arrow that forces the target, if damaged by the arrow’s " +
-                                            "attack, to make a Fortitude save or be slain immediately. The DC of this save is equal to 20 + the arcane archer’s Charisma modifier. " +
-                                            "It takes 1 day to make a slaying arrow, and the arrow only functions for the arcane archer who created it. The slaying arrow lasts no " +
-                                            "longer than 1 year, and the archer can only have one such arrow in existence at a time.",
-                                            "",
-                                            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
-                                            FeatureGroup.None,
-                                            Helpers.CreateAddAbilityResource(arrow_of_death_resource));
-
-            var arrow_of_death_buff = Helpers.CreateBuff(arrow_of_death.name + "Buff", "Arrow of Death",
-                                            $"A target hit by this arrow must pass a Fortitude save or die, the DC for this save is 20 + your Charisma bonus.", "",
-                                            library.Get<BlueprintAbility>("2c38da66e5a599347ac95b3294acbe00").Icon, null);
-
-            var arrow_of_death_action = Common.createContextActionApplyBuff(arrow_of_death_buff, 
-                Helpers.CreateContextDuration(Common.createSimpleContextValue(1), DurationRate.Rounds), dispellable: false);
-        
-            var save_action = Helpers.CreateConditionalSaved(new Kingmaker.ElementsSystem.GameAction[0], new Kingmaker.ElementsSystem.GameAction[] { arrow_of_death_action });
+            arrow_of_death_resource = Helpers.CreateAbilityResource("ArrowOfDeathArrowResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
+            arrow_of_death_resource.SetFixedResource(1);
+            arrow_of_death = Helpers.CreateFeature("ArcaneArcherArrowOfDeath", "Arrow of Death",
+            $"At 10th level, an arcane archer can create a special type of slaying arrow that forces the target, if damaged by the arrow’s " +
+            "attack, to make a Fortitude save or be slain immediately. The DC of this save is equal to 20 + the arcane archer’s Charisma modifier. " +
+            "It takes 1 day to make a slaying arrow, and the arrow only functions for the arcane archer who created it. The slaying arrow lasts no " +
+            "longer than 1 year, and the archer can only have one such arrow in existence at a time.",
+            "",
+            Helpers.GetIcon("6aa84ca8918ac604685a3d39a13faecc"), // spellstrike
+            FeatureGroup.None,
+            Helpers.CreateAddAbilityResource(arrow_of_death_resource));
+            var save_action = Helpers.CreateConditionalSaved(new Kingmaker.ElementsSystem.GameAction[0], new Kingmaker.ElementsSystem.GameAction[] { Helpers.Create<ContextActionKillTarget>() });
             var action = Helpers.CreateRunActions(Common.createContextActionAttack(), Common.createContextActionSavingThrow(SavingThrowType.Fortitude, Helpers.CreateActionList(save_action)));
 
-            var kill_target = Helpers.CreateAddFactContextActions(save_action);
-            kill_target.Activated.Actions.AddToArray(Helpers.Create<ContextActionKillTarget>());
-            arrow_of_death_buff.AddComponent(kill_target);
-            
             var arrow_of_death_ability = Helpers.CreateAbility($"ArrowOfDeathAbility",
                                             arrow_of_death.Name,
                                             arrow_of_death.Description,
@@ -541,8 +536,7 @@ namespace CallOfTheWild
                                             action,
                                             Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
                                             Common.createContextCalculateAbilityParamsBasedOnClass(character_class: arcanearcher, stat: StatType.Charisma),
-                                            Helpers.CreateResourceLogic(arrow_of_death_resource)
-                                                     );
+                                            Helpers.CreateResourceLogic(arrow_of_death_resource));
 
             arrow_of_death_ability.setMiscAbilityParametersSingleTargetRangedHarmful(works_on_allies: false);
             arrow_of_death_ability.NeedEquipWeapons = true;

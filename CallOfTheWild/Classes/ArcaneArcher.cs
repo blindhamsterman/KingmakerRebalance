@@ -14,7 +14,6 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
 using System;
-using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.Utility;
 using Kingmaker.Enums.Damage;
 using Kingmaker.UnitLogic;
@@ -26,10 +25,7 @@ using Kingmaker.UnitLogic.Mechanics.Components;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Mechanics.Actions;
-using Kingmaker.UnitLogic.Buffs.Blueprints;
-using static Kingmaker.UnitLogic.ActivatableAbilities.ActivatableAbilityResourceLogic;
 using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
-using UnityEngine;
 using Kingmaker.UnitLogic.Alignments;
 using Kingmaker.UnitLogic.Abilities.Components.CasterCheckers;
 using Kingmaker.Blueprints.Items.Ecnchantments;
@@ -59,8 +55,6 @@ namespace CallOfTheWild
         static internal BlueprintFeature arrow_of_death;
         static internal BlueprintAbilityResource arrow_of_death_resource;
         static internal BlueprintFeature arcane_archer_proficiencies;
-
-        static internal ActivatableAbilityGroup enhance_arrows_elemental_group = ActivatableAbilityGroupExtension.EnhanceArrowsElemental.ToActivatableAbilityGroup();//ActivatableAbilityGroup.TrueMagus;
 
         internal static void CreateArcaneArcherClass()
         {
@@ -164,9 +158,9 @@ namespace CallOfTheWild
             CreateArcheryFeatSelection();
             CreatePhaseArrow(allowed_weapons);
             CreateEnhanceArrowsBurst();
-            CreateHailOfArrows(allowed_weapons);
+            CreateHailOfArrows();
             CreateEnhanceArrowsAligned(allowed_weapons);
-            CreateArrowOfDeath(allowed_weapons);
+            CreateArrowOfDeath();
 
             arcane_archer_progression = Helpers.CreateProgression("ArcaneArcherProgression",
                             arcanearcher.Name,
@@ -494,7 +488,7 @@ namespace CallOfTheWild
             phase_arrow_ability.NeedEquipWeapons = true;
             phase_arrow.AddComponent(Helpers.CreateAddFacts(phase_arrow_ability));
         }
-        static void CreateHailOfArrows(BlueprintWeaponType[] allowed_weapons)
+        static void CreateHailOfArrows()
         {
             hail_of_arrows_resource = Helpers.CreateAbilityResource("HailofArrowsResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
             hail_of_arrows_resource.SetFixedResource(1);
@@ -526,7 +520,7 @@ namespace CallOfTheWild
             hail_of_arrows.AddComponent(Helpers.CreateAddFacts(hail_of_arrows_ability));
 
         }
-        static void CreateArrowOfDeath(BlueprintWeaponType[] allowed_weapons)
+        static void CreateArrowOfDeath()
         {
             arrow_of_death_resource = Helpers.CreateAbilityResource("ArrowOfDeathArrowResource", "", "", "", library.Get<BlueprintFeature>("6aa84ca8918ac604685a3d39a13faecc").Icon);
             arrow_of_death_resource.SetFixedResource(1);

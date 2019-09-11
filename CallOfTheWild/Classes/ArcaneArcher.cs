@@ -499,6 +499,9 @@ namespace CallOfTheWild
             LoadIcons.Image2Sprite.Create(@"hailOfArrows.png"),
             FeatureGroup.None,
             Helpers.CreateAddAbilityResource(hailOfArrowsResource));
+
+            // weapon range isn't taken into account
+            // no maximum number so if there were more enemies than the arcane archers current level they'd get too many shots., but more than 8 is unusual.
             var hailOfArrowsAbility = Helpers.CreateAbility($"HailOfArrowsAbility",
                                             hailOfArrows.Name,
                                             hailOfArrows.Description,
@@ -752,6 +755,7 @@ namespace CallOfTheWild
         {
         }
     }
+    
 
 }
 

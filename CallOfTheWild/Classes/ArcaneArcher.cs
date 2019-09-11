@@ -211,7 +211,7 @@ namespace CallOfTheWild
                 "Unlike magic weapons created by normal means, the archer need not spend gold pieces to accomplish this task. However, an archer’s " +
                 "magic arrows only function for him.",
                 "f64aa29727344ed9b7fa7918943d3038",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsMagic.png"),
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsMagic.png"),
                 FeatureGroup.None,
                 Helpers.Create<EnhanceArrowsMagic>(u => u.weapon_types = allowed_weapons));
         }
@@ -223,13 +223,13 @@ namespace CallOfTheWild
             var name = "EnhanceArrows";
             var displayName = "Enhance Arrows";
             var fireArrowBuff = Helpers.CreateBuff(name + "Fire" + "Buff", displayName + " (Fire)", $"Whilst active, your arrows deal 1d6 additional Fire damage.", "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsFire.png"), null,
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsFire.png"), null,
                 Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Fire; }));
             var frostArrowBuff = Helpers.CreateBuff(name + "Frost" + "Buff", displayName + " (Frost)", $"Whilst active, your arrows deal 1d6 additional Frost damage.", "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsFrost.png"), null,
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsFrost.png"), null,
                 Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Cold; }));
             var shockArrowBuff = Helpers.CreateBuff(name + "Shock" + "Buff", displayName + " (Shock)", $"Whilst active, your arrows deal 1d6 additional Shock damage.", "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsShock.png"), null,
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsShock.png"), null,
                 Helpers.Create<EnhanceArrowsElemental>(u => { u.weapon_types = allowed_weapons; u.damage_type = DamageEnergyType.Electricity; }));
 
             var actionFire = Helpers.CreateRunActions(Common.createContextActionApplyBuff(fireArrowBuff,
@@ -258,7 +258,7 @@ namespace CallOfTheWild
                 "spells or, in the case of spontaneous spellcasters, after 8 hours of rest." +
                 "\n At 3rd level, every non-magical arrow fired by an arcane archer gains one of the following elemental themed weapon qualities: flaming, frost, or shock.",
                 "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsMagic.png"), // hurricane bow
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsMagic.png"), // hurricane bow
                 FeatureGroup.None,
                 Helpers.CreateAddFact(abilityFire),
                 Helpers.CreateAddFact(abilityFrost),
@@ -277,19 +277,19 @@ namespace CallOfTheWild
             //buffs
             var holyArrowBuff = Helpers.CreateBuff(name + "Holy" + "Buff", displayName + " (Holy)",
                 $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of evil alignment", "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsHoly.png"), null,
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsHoly.png"), null,
                 Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Holy; }));
             var unholyArrowBuff = Helpers.CreateBuff(name + "Unoly" + "Buff", displayName + " (Unoly)",
                 $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of good alignment", "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsUnholy.png"), null,
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsUnholy.png"), null,
                 Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Unoly"; u.damage_type = DamageEnergyType.Unholy; }));
             var anarchicArrowBuff = Helpers.CreateBuff(name + "Anarchic" + "Buff", displayName + " (Anarchic)",
                 $"Whilst active, your arrows deal 2d6 additional Unholy damage against creatures of lawful alignment", "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsChaos.png"), null,
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsChaos.png"), null,
                 Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Anarchic"; u.damage_type = DamageEnergyType.Unholy; }));
             var axiomaticArrowBuff = Helpers.CreateBuff(name + "Axiomic" + "Buff", displayName + " (Axiomic)",
                 $"Whilst active, your arrows deal 2d6 additional Holy damage against creatures of chaotic alignment", "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsLaw.png"), null,
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsLaw.png"), null,
                 Helpers.Create<EnhanceArrowsAligned>(u => { u.weapon_types = allowed_weapons; u.alignment = "Axiomic"; u.damage_type = DamageEnergyType.Holy; }));
 
             //actions
@@ -338,7 +338,7 @@ namespace CallOfTheWild
                 "anarchic, axiomatic, holy, or unholy. The arcane archer cannot choose an ability that is the opposite of his alignment " +
                 "(for example, a lawful good arcane archer could not choose anarchic or unholy as his weapon quality).",
                 "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsMagic.png"),
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsMagic.png"),
                 FeatureGroup.None,
                 Helpers.CreateAddFact(abilityHoly),
                 Helpers.CreateAddFact(abilityUnoly),
@@ -354,7 +354,7 @@ namespace CallOfTheWild
                 $"At 7th level, every non-magical arrow fired by an arcane archer gains one of the following elemental burst weapon qualities: " +
                 "flaming burst, icy burst, or shocking burst. This ability replaces the ability gained at 3rd level.",
                 "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsMagic.png"),
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsMagic.png"),
                 FeatureGroup.None);
         }
 
@@ -371,7 +371,7 @@ namespace CallOfTheWild
             enhanceArrowsDistance = Helpers.CreateFeature("ArcaneArcherEnhanceArrowsDistance", "Enhance Arrows (Distance)",
                 $"At 5th level, every non-magical arrow fired by an arcane archer gains the distance weapon quality.",
                 "",
-                LoadIcons.Image2Sprite.Create(@"enhanceArrowsMagic.png"),
+                LoadIcons.Image2Sprite.Create(@"ArcaneArcher/enhanceArrowsMagic.png"),
                 FeatureGroup.None);
         }
 
@@ -495,7 +495,7 @@ namespace CallOfTheWild
             $"In lieu of his regular attacks, once per day an arcane archer of 8th level or higher can fire an arrow at each and every " +
             "target within range. Each attack uses the archer’s primary attack bonus, and each enemy may only be targeted by a single arrow",
             "",
-            LoadIcons.Image2Sprite.Create(@"hailOfArrows.png"),
+            LoadIcons.Image2Sprite.Create(@"ArcaneArcher/hailOfArrows.png"),
             FeatureGroup.None,
             Helpers.CreateAddAbilityResource(hailOfArrowsResource));
 
@@ -530,7 +530,7 @@ namespace CallOfTheWild
             "It takes 1 day to make a slaying arrow, and the arrow only functions for the arcane archer who created it. The slaying arrow lasts no " +
             "longer than 1 year, and the archer can only have one such arrow in existence at a time.",
             "",
-            LoadIcons.Image2Sprite.Create(@"arrowOfDeath.png"),
+            LoadIcons.Image2Sprite.Create(@"ArcaneArcher/arrowOfDeath.png"),
             FeatureGroup.None,
             Helpers.CreateAddAbilityResource(arrowOfDeathResource));
             var save_condition = Helpers.CreateConditionalSaved(new Kingmaker.ElementsSystem.GameAction[0], new Kingmaker.ElementsSystem.GameAction[] { Helpers.Create<ContextActionKillTarget>() });

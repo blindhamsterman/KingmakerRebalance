@@ -493,8 +493,7 @@ namespace CallOfTheWild
             hailOfArrowsResource.SetFixedResource(1);
             hailOfArrows = Helpers.CreateFeature("ArcaneArcherHailofArrows", "Hail of Arrows",
             $"In lieu of his regular attacks, once per day an arcane archer of 8th level or higher can fire an arrow at each and every " +
-            "target within range, to a maximum of one target for every arcane archer level she has earned. Each attack uses the archer’s primary " +
-            "attack bonus, and each enemy may only be targeted by a single arrow",
+            "target within range. Each attack uses the archer’s primary attack bonus, and each enemy may only be targeted by a single arrow",
             "",
             LoadIcons.Image2Sprite.Create(@"hailOfArrows.png"),
             FeatureGroup.None,

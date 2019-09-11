@@ -118,6 +118,7 @@ namespace CallOfTheWild
 
             createHinterlanderProgression();
             hinterlander_class.Progression = hinterlander_progression;
+            hinterlander_class.AddComponent(Helpers.Create<SkipLevelsForSpellProgression>());
 
             Helpers.RegisterClass(hinterlander_class);
         }

@@ -44,7 +44,7 @@ namespace CallOfTheWild
         static internal BlueprintFeature enhanceArrowsDistance;
         static internal BlueprintFeature enhanceArrowsBurst;
         static internal BlueprintFeature enhanceArrowsAligned;
-        static internal BlueprintFeatureSelection arcaneArcherSpellcasting;
+        static internal BlueprintFeatureSelection spellbookSelection;
         static internal BlueprintFeatureSelection arcaneArcherFeat;
         static internal BlueprintFeature seekerArrow;
         static internal BlueprintAbilityResource seekerArrowResource;
@@ -151,7 +151,7 @@ namespace CallOfTheWild
             allowed_weapons[3] = library.Get<BlueprintWeaponType>("011f6f86a0b16df4bbf7f40878c3e80b"); // composite shortbow
             CreateArcaneArcherProficiencies();
             CreateEnhanceArrowsMagic(allowed_weapons);
-            CreateSpellbookChoice();
+            CreateSpellbookSelection();
             CreateEnhanceArrowsElemental(allowed_weapons);
             CreateSeekerArrow(allowed_weapons);
             CreateArcheryFeatSelection();
@@ -171,7 +171,7 @@ namespace CallOfTheWild
 
             arcaneArcherProgression.LevelEntries = new LevelEntry[] {
                 Helpers.LevelEntry(1, arcaneArcherProficiencies, enhanceArrowsMagic),
-                Helpers.LevelEntry(2, Hinterlander.imbue_arrow, arcaneArcherSpellcasting),
+                Helpers.LevelEntry(2, Hinterlander.imbue_arrow, spellbookSelection),
                 Helpers.LevelEntry(3, enhanceArrowsElemental),
                 Helpers.LevelEntry(4, seekerArrow),
                 Helpers.LevelEntry(5, arcaneArcherFeat), // Distant arrows aren't possible, providing a feat for this level seems reasonable seeing as the class also doesn't get spellcasting here.
@@ -189,7 +189,7 @@ namespace CallOfTheWild
                                                          Helpers.CreateUIGroup(hailOfArrows),
                                                          Helpers.CreateUIGroup(arrowOfDeath),
                                                          Helpers.CreateUIGroup(enhanceArrowsMagic, enhanceArrowsElemental, enhanceArrowsBurst, enhanceArrowsAligned),
-                                                         Helpers.CreateUIGroup(arcaneArcherSpellcasting, Hinterlander.imbue_arrow)
+                                                         Helpers.CreateUIGroup(spellbookSelection, Hinterlander.imbue_arrow)
                                                         };
         }
 
@@ -375,11 +375,11 @@ namespace CallOfTheWild
                 FeatureGroup.None);
         }
 
-        static void CreateSpellbookChoice()
+        static void CreateSpellbookSelection()
         {
             var comps = new List<BlueprintComponent>();
             var compsArray = comps.ToArray();
-            arcaneArcherSpellcasting = Helpers.CreateFeatureSelection("ArcaneArcherSpellbookSelection",
+            spellbookSelection = Helpers.CreateFeatureSelection("ArcaneArcherSpellbookSelection",
             "Arcane Spellcasting",
             $"At 2nd level, and at every level thereafter, with an exception for 5th and 9th levels, " +
                                        "an Arcane Archer  gains new spells per day as if he had also gained a level in an arcane spellcasting " +
@@ -391,7 +391,7 @@ namespace CallOfTheWild
                                        "ea4c7c56d90d413886876152b03f9f5f",
                                        LoadIcons.Image2Sprite.Create(@"FeatIcons/Icon_Casting_Combat.png"),
                                        FeatureGroup.EldritchKnightSpellbook, compsArray);
-            Common.addSpellbooksToSpellSelection("Arcane Archer", 1, arcaneArcherSpellcasting, divine: false, alchemist: false);
+            Common.addSpellbooksToSpellSelection("Arcane Archer", 1, spellbookSelection, divine: false, alchemist: false);
         }
 
 

@@ -2475,6 +2475,52 @@ namespace CallOfTheWild
             }
         }
 
+          public class ContextActionAttackInRange : ContextAction
+        {
+            public ActionList action_on_success = null;
+            public ActionList action_on_miss = null;
+            public override string GetCaption()
+            {
+                return string.Format("Caster attack");
+            }
+
+            public override void RunAction()
+            {
+                UnitEntityData maybeCaster = this.Context.MaybeCaster;
+                if (maybeCaster == null)
+                {
+                    UberDebug.LogError((object)"Caster is missing", (object[])Array.Empty<object>());
+                }
+                else
+                {
+                    var target = this.Target;
+                    if (target == null)
+                        return;
+
+                    RuleAttackWithWeapon attackWithWeapon = new RuleAttackWithWeapon(maybeCaster, target.Unit, maybeCaster.Body.PrimaryHand.MaybeWeapon, 0);
+                    attackWithWeapon.Reason = (RuleReason)this.Context;
+                    RuleAttackWithWeapon rule = attackWithWeapon;
+                    Log.Write("TEST");
+                    Log.Write("Weapon range is "+maybeCaster.Body.PrimaryHand.MaybeWeapon.AttackRange);
+                    Log.Write("Distance to target is "+maybeCaster.DistanceTo(target.Unit).Feet());
+
+                    if (maybeCaster.DistanceTo(target.Unit).Feet() <= maybeCaster.Body.PrimaryHand.MaybeWeapon.AttackRange)
+                    {
+                        Log.Write("Attacking");
+                        this.Context.TriggerRule<RuleAttackWithWeapon>(rule);
+                        if (rule.AttackRoll.IsHit)
+                        {
+                            action_on_success?.Run();
+                        }
+                        else
+                        {
+                            action_on_miss?.Run();
+                        }
+                    }
+                }
+            }
+        }
+
 
         public class AttackAnimation : BlueprintComponent, IAbilityCustomAnimation
         {

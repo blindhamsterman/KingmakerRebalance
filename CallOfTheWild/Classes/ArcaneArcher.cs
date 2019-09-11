@@ -513,7 +513,7 @@ namespace CallOfTheWild
                                             "",
                                             "",
                                             Helpers.Create<NewMechanics.AttackAnimation>(),
-                                            Helpers.CreateRunActions(Common.createContextActionAttack()),
+                                            Helpers.CreateRunActions(Common.createContextActionAttackInRange()),
                                             Common.createAbilityCasterMainWeaponCheck(WeaponCategory.Longbow, WeaponCategory.Shortbow),
                                             Helpers.CreateAbilityTargetsAround(50.Feet(), TargetType.Enemy),
                                             Helpers.CreateResourceLogic(hailOfArrowsResource));

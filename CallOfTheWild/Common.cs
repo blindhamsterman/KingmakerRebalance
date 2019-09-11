@@ -2551,6 +2551,14 @@ namespace CallOfTheWild
             return c;
         }
 
+        static public NewMechanics.ContextActionAttackInRange createContextActionAttackInRange(ActionList action_on_hit = null, ActionList action_on_miss = null)
+        {
+            var c = Helpers.Create<NewMechanics.ContextActionAttackInRange>();
+            c.action_on_success = action_on_hit;
+            c.action_on_miss = action_on_miss;
+            return c;
+        }
+
 
     }
 }

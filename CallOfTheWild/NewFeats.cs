@@ -1,5 +1,6 @@
 ﻿using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Blueprints.Classes.Prerequisites;
 using Kingmaker.Blueprints.Classes.Selection;
 using Kingmaker.Designers.EventConditionActionSystem.Actions;
 using Kingmaker.Designers.Mechanics.Buffs;
@@ -42,6 +43,8 @@ namespace CallOfTheWild
         static internal BlueprintFeature guided_hand;
         static internal BlueprintFeature deadeyes_blessing;
         static internal BlueprintFeature paladin_channel_extra;
+        static internal BlueprintFeature channeling_scourge;
+        static internal BlueprintFeature versatile_channeler;
 
         static internal void load()
         {
@@ -60,6 +63,107 @@ namespace CallOfTheWild
             createGuidedHand();
             createDeadeyesBlessing();
             createExtraChannelPaladin();
+            createChannelingScourge();
+            ChannelEnergyEngine.createImprovedChannel();
+
+            createVersatileChanneler();
+        }
+
+
+        static void createVersatileChanneler()
+        {
+            var cleric = library.Get<BlueprintCharacterClass>("67819271767a9dd4fbfd4ae700befea0");
+            var channel_positive = library.Get<BlueprintFeature>("a79013ff4bcd4864cb669622a29ddafb");
+            var channel_negative = library.Get<BlueprintFeature>("3adb2c906e031ee41a01bfc1d5fb7eea");
+
+            BlueprintAbility[] positive_channels = new BlueprintAbility[] { channel_positive.GetComponent<AddFacts>().Facts[1] as BlueprintAbility,
+                                                                            channel_positive.GetComponent<AddFacts>().Facts[2] as BlueprintAbility};
+
+            BlueprintAbility[] negative_channels = new BlueprintAbility[] { channel_negative.GetComponent<AddFacts>().Facts[1] as BlueprintAbility,
+                                                                            channel_negative.GetComponent<AddFacts>().Facts[2] as BlueprintAbility};
+
+            var versatile_channeler_negative = Helpers.CreateFeature("VersatileChannelerNegativeFeature",
+                                                                     "",
+                                                                     "",
+                                                                     "",
+                                                                     null,
+                                                                     FeatureGroup.None,
+                                                                     Helpers.CreateAddFacts(channel_negative),
+                                                                     Common.createRemoveFeatureOnApply(channel_negative.GetComponent<AddFacts>().Facts[3] as BlueprintFeature),
+                                                                     Helpers.Create<NewMechanics.ContextIncreaseCasterLevelForSelectedSpells>(c => { c.spells = negative_channels; c.value = Common.createSimpleContextValue(-2); })
+                                                                     );
+            versatile_channeler_negative.HideInCharacterSheetAndLevelUp = true;
+
+
+            var versatile_channeler_positive = Helpers.CreateFeature("VersatileChannelerPositiveFeature",
+                                                         "",
+                                                         "",
+                                                         "",
+                                                         null,
+                                                         FeatureGroup.None,
+                                                         Helpers.CreateAddFacts(channel_positive),
+                                                         Common.createRemoveFeatureOnApply(channel_positive.GetComponent<AddFacts>().Facts[3] as BlueprintFeature),
+                                                         Helpers.Create<NewMechanics.ContextIncreaseCasterLevelForSelectedSpells>(c => { c.spells = positive_channels; c.value = Common.createSimpleContextValue(-2); })
+                                                         );
+            versatile_channeler_positive.HideInCharacterSheetAndLevelUp = true;
+
+            versatile_channeler = Helpers.CreateFeature("VersatileChannelerFeature",
+                                                        "Versatile Channeler",
+                                                        "If you normally channel positive energy, you may choose to channel negative energy as if your effective cleric level were 2 levels lower than normal. If you normally channel negative energy, you may choose to channel positive energy as if your effective cleric level were 2 levels lower than normal.\n"
+                                                        + "Note: This feat only applies to neutral clerics who worship neutral deities, or neutral clerics who do not worship a deity — characters who have the channel energy class ability and have to make a choice to channel positive or negative energy at 1st level. Clerics whose alignment or deity makes this choice for them cannot select this feat.",
+                                                        "",
+                                                        null,
+                                                        FeatureGroup.Feat,
+                                                        Common.createAddFeatureIfHasFact(channel_positive, versatile_channeler_positive, not: true),
+                                                        Common.createAddFeatureIfHasFact(channel_negative, versatile_channeler_negative, not: true),
+                                                        channel_positive.GetComponent<PrerequisiteFeature>(),
+                                                        channel_negative.GetComponent<PrerequisiteFeature>(),
+                                                        Common.createPrerequisiteAlignment(AlignmentMaskType.ChaoticNeutral | AlignmentMaskType.LawfulNeutral | AlignmentMaskType.TrueNeutral)
+                                                        );
+            library.AddFeats(versatile_channeler);
+        }
+
+        static void createChannelingScourge()
+        {
+            var cleric = library.Get<BlueprintCharacterClass>("67819271767a9dd4fbfd4ae700befea0");
+            var inquisitor = library.Get<BlueprintCharacterClass>("f1a70d9e1b0b41e49874e1fa9052a1ce");
+            var cleric_channel = library.Get<BlueprintFeatureSelection>("d332c1748445e8f4f9e92763123e31bd");
+
+            var harm_undead = library.Get<BlueprintAbility>("279447a6bf2d3544d93a0a39c3b8e91d");
+            var harm_living = library.Get<BlueprintAbility>("89df18039ef22174b81052e2e419c728");
+
+
+            var channels = new BlueprintAbility[]{
+                                                    harm_undead,
+                                                    harm_living,
+                                                    ChannelEnergyEngine.getQuickChannelVariant(harm_undead),
+                                                    ChannelEnergyEngine.getQuickChannelVariant(harm_living),
+                                                    ChannelEnergyEngine.getChannelSmiteVariant(harm_undead),
+                                                    ChannelEnergyEngine.getChannelSmiteVariant(harm_living)
+                                                 };
+
+
+            channeling_scourge = Helpers.CreateFeature("ChannelingScourgeFeature",
+                                                       "Channeling Scourge",
+                                                       "When you use channel energy to deal damage, your inquisitor levels count as cleric levels for determining the number of damage dice and the saving throw DC",
+                                                       "",
+                                                       null,
+                                                       FeatureGroup.Feat,
+                                                       Helpers.Create<NewMechanics.ContextIncreaseCasterLevelForSelectedSpells>(c =>
+                                                                                                                               {
+                                                                                                                                   c.spells = channels;
+                                                                                                                                   c.value = Helpers.CreateContextValue(AbilityRankType.StatBonus);
+                                                                                                                               }
+                                                                                                                               ),
+                                                       Helpers.CreateContextRankConfig(baseValueType: ContextRankBaseValueType.ClassLevel,
+                                                                                       classes: new BlueprintCharacterClass[] { inquisitor },
+                                                                                       type: AbilityRankType.StatBonus
+                                                                                       ),
+                                                       Helpers.PrerequisiteClassLevel(cleric, 1),
+                                                       Helpers.PrerequisiteClassLevel(inquisitor, 1),
+                                                       Helpers.PrerequisiteFeature(cleric_channel)
+                                                       );
+            library.AddFeats(channeling_scourge);
         }
 
 

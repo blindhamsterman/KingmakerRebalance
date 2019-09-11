@@ -876,12 +876,10 @@ namespace CallOfTheWild
         }
         public static BlueprintFeatureSelection skillFocusFeat;
 
-        public static BlueprintCharacterClass eldritchKnight;
         // All classes (including prestige classes).
         public static List<BlueprintCharacterClass> classes;
 
         public static List<BlueprintCharacterClass> prestigeClasses;
-        public static List<BlueprintCharacterClass> prestigeClassesSkipLevels;
 
         public static BlueprintCharacterClass sorcererClass, magusClass, dragonDiscipleClass;
         public static BlueprintArchetype eldritchScionArchetype;
@@ -917,11 +915,8 @@ namespace CallOfTheWild
 
             // For some reason, Eldritch Scion is a class and an archetype.
             const String eldritchScionClassId = "f5b8c63b141b2f44cbb8c2d7579c34f5";
-            eldritchKnight = library.Get<BlueprintCharacterClass>("de52b73972f0ed74c87f8f6a8e20b542");
-            eldritchKnight.AddComponent(Create<SkipLevelsForSpellProgression>());
             classes = library.Root.Progression.CharacterClasses.Where(c => c.AssetGuid != eldritchScionClassId).ToList();
             prestigeClasses = classes.Where(c => c.PrestigeClass).ToList();
-            prestigeClassesSkipLevels = prestigeClasses.Where(c => c.GetComponent<SkipLevelsForSpellProgression>()).ToList();
 
             sorcererClass = GetClass("b3a505fb61437dc4097f43c3f8f9a4cf");
             magusClass = GetClass("45a4607686d96a1498891b3286121780");
@@ -2391,8 +2386,6 @@ namespace CallOfTheWild
             });
             progressionRoot.CharacterClasses = classes.ToArray();
             Helpers.classes.Add(class_to_register);
-            prestigeClasses = classes.Where(c => c.PrestigeClass).ToList();
-            prestigeClassesSkipLevels = prestigeClasses.Where(c => c.GetComponent<SkipLevelsForSpellProgression>()).ToList();
         }
 
         static readonly int[] fullCasterCost = new int[] { 13, 25, 150, 375, 700, 1125, 1650, 2275, 3000, 3825 };

@@ -149,7 +149,7 @@ namespace CallOfTheWild
             allowed_weapons[1] = library.Get<BlueprintWeaponType>("7a1211c05ec2c46428f41e3c0db9423f"); // longbow
             allowed_weapons[2] = library.Get<BlueprintWeaponType>("1ac79088a7e5dde46966636a3ac71c35"); // composite longbow
             allowed_weapons[3] = library.Get<BlueprintWeaponType>("011f6f86a0b16df4bbf7f40878c3e80b"); // composite shortbow
-            createArcaneArcherProficiencies();
+            CreateArcaneArcherProficiencies();
             CreateEnhanceArrowsMagic(allowed_weapons);
             CreateSpellbookChoice();
             CreateEnhanceArrowsElemental(allowed_weapons);
@@ -193,7 +193,7 @@ namespace CallOfTheWild
                                                         };
         }
 
-        static void createArcaneArcherProficiencies()
+        static void CreateArcaneArcherProficiencies()
         {
             arcaneArcherProficiencies = library.CopyAndAdd<BlueprintFeature>(
             "c5e479367d07d62428f2fe92f39c0341", // ranger proficiencies

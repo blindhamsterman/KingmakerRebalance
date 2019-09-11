@@ -2500,11 +2500,10 @@ namespace CallOfTheWild
                     RuleAttackWithWeapon attackWithWeapon = new RuleAttackWithWeapon(maybeCaster, target.Unit, maybeCaster.Body.PrimaryHand.MaybeWeapon, 0);
                     attackWithWeapon.Reason = (RuleReason)this.Context;
                     RuleAttackWithWeapon rule = attackWithWeapon;
-                    Log.Write("TEST");
-                    Log.Write("Weapon range is "+maybeCaster.Body.PrimaryHand.MaybeWeapon.AttackRange);
-                    Log.Write("Distance to target is "+maybeCaster.DistanceTo(target.Unit).Feet());
-
-                    if (maybeCaster.DistanceTo(target.Unit).Feet() <= maybeCaster.Body.PrimaryHand.MaybeWeapon.AttackRange)
+                    // Log.Write("TEST");
+                    // Log.Write("Weapon range is "+maybeCaster.Body.PrimaryHand.MaybeWeapon.AttackRange.Meters);
+                    // Log.Write("Distance to target is "+maybeCaster.DistanceTo(target.Unit));
+                    if (maybeCaster.DistanceTo(target.Unit) <= maybeCaster.Body.PrimaryHand.MaybeWeapon.AttackRange.Meters)
                     {
                         Log.Write("Attacking");
                         this.Context.TriggerRule<RuleAttackWithWeapon>(rule);

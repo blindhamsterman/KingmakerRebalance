@@ -36,8 +36,8 @@ namespace CallOfTheWild
     static class ArcaneArcherClass
     {
         static LibraryScriptableObject library => Main.library;
-        static internal BlueprintCharacterClass arcanAarcher;
-        static internal BlueprintCharacterClass[] arcanAarcherArray;
+        static internal BlueprintCharacterClass arcaneArcher;
+        static internal BlueprintCharacterClass[] arcaneArcherArray;
         static internal BlueprintProgression arcaneArcherProgression;
         static internal BlueprintFeature enhanceArrowsMagic;
         static internal BlueprintFeature enhanceArrowsElemental;
@@ -59,29 +59,29 @@ namespace CallOfTheWild
         internal static void CreateArcaneArcherClass()
         {
             var library = Main.library;
-            if (ArcaneArcherClass.arcanAarcher != null) return;
+            if (ArcaneArcherClass.arcaneArcher != null) return;
 
-            arcanAarcher = Helpers.Create<BlueprintCharacterClass>();
+            arcaneArcher = Helpers.Create<BlueprintCharacterClass>();
 
-            arcanAarcher.name = "ArcaneArcherClass";
-            library.AddAsset(arcanAarcher, "0fbf5e3fe02f4db19492659dc8a3c411");
-            arcanAarcher.LocalizedName = Helpers.CreateString("ArcanearcanAarcher.Name", "Arcane Archer");
-            arcanAarcher.LocalizedDescription = Helpers.CreateString("ArcanearcanAarcher.Description",
+            arcaneArcher.name = "ArcaneArcherClass";
+            library.AddAsset(arcaneArcher, "0fbf5e3fe02f4db19492659dc8a3c411");
+            arcaneArcher.LocalizedName = Helpers.CreateString("ArcanearcaneArcher.Name", "Arcane Archer");
+            arcaneArcher.LocalizedDescription = Helpers.CreateString("ArcanearcaneArcher.Description",
                 "Many who seek to perfect the use of the bow sometimes pursue the path of the arcane archer. " +
                 "Arcane archers are masters of ranged combat, as they possess the ability to strike at targets with unerring accuracy and can imbue their arrows with powerful spells. " +
                 "Arrows fired by arcane archers fly at weird and uncanny angles to strike at foes around corners, and can pass through solid objects to hit enemies that cower behind such cover. " +
                 "At the height of their power, arcane archers can fell even the most powerful foes with a single, deadly shot.. ");
             // Matched Druid skill progression
-            arcanAarcher.SkillPoints = 3;
-            arcanAarcher.HitDie = DiceType.D10;
-            arcanAarcher.PrestigeClass = true;
+            arcaneArcher.SkillPoints = 3;
+            arcaneArcher.HitDie = DiceType.D10;
+            arcaneArcher.PrestigeClass = true;
 
             var pointBlankShot = library.Get<BlueprintFeature>("0da0c194d6e1d43419eb8d990b28e0ab"); // Point Blank Shot
             var preciseShot = library.Get<BlueprintFeature>("8f3d1e6b4be006f4d896081f2f889665"); // Precise Shot
             var weaponFocus = library.Get<BlueprintParametrizedFeature>("1e1f627d26ad36f43bbd26cc2bf8ac7e"); // Weapon Focus;
             var sbow = WeaponCategory.Shortbow;
             var lbow = WeaponCategory.Longbow;
-            arcanAarcher.SetComponents(
+            arcaneArcher.SetComponents(
                 pointBlankShot.PrerequisiteFeature(),
                 preciseShot.PrerequisiteFeature(),
                 Common.createPrerequisiteParametrizedFeatureWeapon(weaponFocus, lbow, any: true),
@@ -94,51 +94,51 @@ namespace CallOfTheWild
             var wizard = Helpers.GetClass("ba34257984f4c41408ce1dc2004e342e");
             var savesPrestigeLow = library.Get<BlueprintStatProgression>("dc5257e1100ad0d48b8f3b9798421c72");
             var savesPrestigeHigh = library.Get<BlueprintStatProgression>("1f309006cd2855e4e91a6c3707f3f700");
-            arcanAarcher.BaseAttackBonus = ranger.BaseAttackBonus; // BAB high
-            arcanAarcher.FortitudeSave = savesPrestigeHigh;
-            arcanAarcher.ReflexSave = savesPrestigeHigh;
-            arcanAarcher.WillSave = savesPrestigeLow;
-            arcanAarcher.IsArcaneCaster = true;
+            arcaneArcher.BaseAttackBonus = ranger.BaseAttackBonus; // BAB high
+            arcaneArcher.FortitudeSave = savesPrestigeHigh;
+            arcaneArcher.ReflexSave = savesPrestigeHigh;
+            arcaneArcher.WillSave = savesPrestigeLow;
+            arcaneArcher.IsArcaneCaster = true;
 
             // Perception (Wis), Ride (Dex), Stealth (Dex), and Survival (Wis).
             // knowledge nature in place of survival, there is no replacement for Ride
-            arcanAarcher.ClassSkills = new StatType[] {
+            arcaneArcher.ClassSkills = new StatType[] {
                 StatType.SkillStealth,
                 StatType.SkillLoreNature,
                 StatType.SkillPerception
             };
 
-            arcanAarcher.StartingGold = ranger.StartingGold;
-            arcanAarcher.PrimaryColor = ranger.PrimaryColor;
-            arcanAarcher.SecondaryColor = ranger.SecondaryColor;
+            arcaneArcher.StartingGold = ranger.StartingGold;
+            arcaneArcher.PrimaryColor = ranger.PrimaryColor;
+            arcaneArcher.SecondaryColor = ranger.SecondaryColor;
 
-            arcanAarcher.RecommendedAttributes = new StatType[] { StatType.Dexterity };
-            arcanAarcher.NotRecommendedAttributes = Array.Empty<StatType>();
+            arcaneArcher.RecommendedAttributes = new StatType[] { StatType.Dexterity };
+            arcaneArcher.NotRecommendedAttributes = Array.Empty<StatType>();
 
-            arcanAarcher.EquipmentEntities = wizard.EquipmentEntities;
-            arcanAarcher.MaleEquipmentEntities = wizard.MaleEquipmentEntities;
-            arcanAarcher.FemaleEquipmentEntities = wizard.FemaleEquipmentEntities;
+            arcaneArcher.EquipmentEntities = wizard.EquipmentEntities;
+            arcaneArcher.MaleEquipmentEntities = wizard.MaleEquipmentEntities;
+            arcaneArcher.FemaleEquipmentEntities = wizard.FemaleEquipmentEntities;
 
-            arcanAarcher.StartingItems = ranger.StartingItems;
+            arcaneArcher.StartingItems = ranger.StartingItems;
 
             createArcaneArcherProgression();
-            arcanAarcher.Progression = arcaneArcherProgression;
+            arcaneArcher.Progression = arcaneArcherProgression;
 
             // Arcane archers do not gets spells at levels 1,5 and 9, we handle level 1 by giving spellbook selection at level 2
             // we handle 5 and 9 by adding a skip levels for spell progression component to progressiom.
             var skipLevels = new List<int>();
             skipLevels.Add(5);
             skipLevels.Add(9);
-            arcanAarcher.AddComponent(Helpers.Create<SkipLevelsForSpellProgression>(s => s.Levels = skipLevels.ToArray()));
+            arcaneArcher.AddComponent(Helpers.Create<SkipLevelsForSpellProgression>(s => s.Levels = skipLevels.ToArray()));
 
-            Helpers.RegisterClass(arcanAarcher);
+            Helpers.RegisterClass(arcaneArcher);
             
         }
 
 
         static BlueprintCharacterClass[] getArcaneArcherArray()
         {
-            return new BlueprintCharacterClass[] { arcanAarcher };
+            return new BlueprintCharacterClass[] { arcaneArcher };
         }
 
         static void createArcaneArcherProgression()
@@ -162,10 +162,10 @@ namespace CallOfTheWild
             CreateArrowOfDeath();
 
             arcaneArcherProgression = Helpers.CreateProgression("ArcaneArcherProgression",
-                            arcanAarcher.Name,
-                            arcanAarcher.Description,
+                            arcaneArcher.Name,
+                            arcaneArcher.Description,
                             "780848b1fb1f4d73a4f1bf64ae5c21b2",
-                            arcanAarcher.Icon,
+                            arcaneArcher.Icon,
                             FeatureGroup.None);
             arcaneArcherProgression.Classes = getArcaneArcherArray();
 

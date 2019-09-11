@@ -880,6 +880,7 @@ namespace CallOfTheWild
         public static List<BlueprintCharacterClass> classes;
 
         public static List<BlueprintCharacterClass> prestigeClasses;
+        public static List<BlueprintCharacterClass> prestigeClassesSkipLevels;
 
         public static BlueprintCharacterClass sorcererClass, magusClass, dragonDiscipleClass;
         public static BlueprintArchetype eldritchScionArchetype;
@@ -917,6 +918,8 @@ namespace CallOfTheWild
             const String eldritchScionClassId = "f5b8c63b141b2f44cbb8c2d7579c34f5";
             classes = library.Root.Progression.CharacterClasses.Where(c => c.AssetGuid != eldritchScionClassId).ToList();
             prestigeClasses = classes.Where(c => c.PrestigeClass).ToList();
+            prestigeClassesSkipLevels = prestigeClasses.Where(c => c.GetComponent<SkipLevelsForSpellProgression>()).ToList();
+            
             sorcererClass = GetClass("b3a505fb61437dc4097f43c3f8f9a4cf");
             magusClass = GetClass("45a4607686d96a1498891b3286121780");
             dragonDiscipleClass = Helpers.GetClass("72051275b1dbb2d42ba9118237794f7c");
@@ -2385,6 +2388,8 @@ namespace CallOfTheWild
             });
             progressionRoot.CharacterClasses = classes.ToArray();
             Helpers.classes.Add(class_to_register);
+            prestigeClasses = classes.Where(c => c.PrestigeClass).ToList();
+            prestigeClassesSkipLevels = prestigeClasses.Where(c => c.GetComponent<SkipLevelsForSpellProgression>()).ToList();
         }
 
         static readonly int[] fullCasterCost = new int[] { 13, 25, 150, 375, 700, 1125, 1650, 2275, 3000, 3825 };

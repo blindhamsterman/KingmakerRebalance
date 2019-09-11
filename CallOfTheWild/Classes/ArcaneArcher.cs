@@ -132,7 +132,7 @@ namespace CallOfTheWild
             arcanAarcher.AddComponent(Helpers.Create<SkipLevelsForSpellProgression>(s => s.Levels = skipLevels.ToArray()));
 
             Helpers.RegisterClass(arcanAarcher);
-            Helpers.classes.Add(arcanAarcher);
+            
         }
 
 

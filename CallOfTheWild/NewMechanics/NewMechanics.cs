@@ -88,12 +88,13 @@ namespace CallOfTheWild
 
             public void OnEventAboutToTrigger(RuleCalculateAbilityParams evt)
             {
+                actual_dc = 0;
                 bool no_save = evt.Spell.EffectOnEnemy != AbilityEffectOnUnit.Harmful; //TODO: properly check for saving throw
                 if (evt.Spell == null || evt.Spellbook == null || evt.Spell.Type != AbilityType.Spell || no_save)
                 {
                     return;
                 }
-                actual_dc = Mathf.Min(evt.Spellbook.GetSpellLevel(evt.Spell), BonusDC);
+                actual_dc = Mathf.Min(evt.SpellLevel, BonusDC);
                 evt.AddBonusDC(actual_dc);
             }
 
@@ -1375,7 +1376,7 @@ namespace CallOfTheWild
         }
 
 
-        public class ResourseCostCalculatorWithDecreasincFacts : BlueprintComponent, IAbilityResourceCostCalculator
+        public class ResourseCostCalculatorWithDecreasingFacts : BlueprintComponent, IAbilityResourceCostCalculator
         {
             public BlueprintFact[] cost_reducing_facts;
 
@@ -2607,6 +2608,8 @@ namespace CallOfTheWild
         {
             public ContextValue value;
             public BlueprintAbility[] spells;
+            public bool correct_dc = false;
+            public int multiplier = 1;
 
             private MechanicsContext Context
             {
@@ -2626,8 +2629,12 @@ namespace CallOfTheWild
                     return;
                 }
                 int bonus = this.value.Calculate(this.Context);
-                evt.AddBonusCasterLevel(bonus);
-                evt.AddBonusDC(- (bonus + 1) / 2);
+                evt.AddBonusCasterLevel(multiplier*bonus);
+
+                if (!correct_dc)
+                {
+                    evt.AddBonusDC((multiplier*bonus / 2));
+                }
             }
 
             public override void OnEventDidTrigger(RuleCalculateAbilityParams evt)
@@ -2635,40 +2642,6 @@ namespace CallOfTheWild
             }
         }
 
-
-        [ComponentName("Increase specific spells CL without DC")]
-        [AllowedOn(typeof(BlueprintUnitFact))]
-        public class ContextIncreaseCasterLevelWithoutDcForSelectedSpells : RuleInitiatorLogicComponent<RuleCalculateAbilityParams>
-        {
-            public ContextValue value;
-            public BlueprintAbility[] spells;
-
-            private MechanicsContext Context
-            {
-                get
-                {
-                    MechanicsContext context = (this.Fact as Buff)?.Context;
-                    if (context != null)
-                        return context;
-                    return (this.Fact as Feature)?.Context;
-                }
-            }
-
-            public override void OnEventAboutToTrigger(RuleCalculateAbilityParams evt)
-            {
-                if (!spells.Contains(evt.Spell))
-                {
-                    return;
-                }
-                int bonus = this.value.Calculate(this.Context);
-                evt.AddBonusCasterLevel(bonus);
-                evt.AddBonusDC(-bonus);
-            }
-
-            public override void OnEventDidTrigger(RuleCalculateAbilityParams evt)
-            {
-            }
-        }
 
     }
 

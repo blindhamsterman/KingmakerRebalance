@@ -81,7 +81,7 @@ namespace CallOfTheWild
     // - in most cases, exceptions will be reported to UnityModManager.log or GameLogFull.txt
     //   and those can be debugged.
     //
-    static class ExtensionMethods
+    public static class ExtensionMethods
     {
         public static V PutIfAbsent<K, V>(this IDictionary<K, V> self, K key, V value) where V : class
         {
@@ -859,6 +859,13 @@ namespace CallOfTheWild
             }
 
 
+            static public bool hasStoredGuid(string blueprint_name)
+            {
+                string stored_guid = "";
+                return guids_in_use.TryGetValue(blueprint_name, out stored_guid);
+            }
+
+
             static public string getGuid(string name)
             {
                 string original_guid;
@@ -868,7 +875,11 @@ namespace CallOfTheWild
                 }
                 else
                 {
+#if DEBUG
                     return Guid.NewGuid().ToString("N");
+#else
+                    throw Main.Error($"Missing AssetId for: {name}"); //ensure that no guids generated in release mode
+#endif
                 }
             }
 
@@ -908,7 +919,7 @@ namespace CallOfTheWild
 
         public static BlueprintWeaponEnchantment ghostTouch;
 
-        public static void Load()
+        internal static void Load()
         {
             var library = Main.library;
 
